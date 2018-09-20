@@ -15,10 +15,14 @@ GuiRadarView::GuiRadarView(GuiContainer* owner, string id, float distance, Targe
 , range_indicator_step_size(0.0f), style(Circular), fog_style(NoFogOfWar), mouse_down_func(nullptr), mouse_drag_func(nullptr), mouse_up_func(nullptr)
 {
     auto_center_on_my_ship = true;
-    for (int scale_magnitude = 0 ; scale_magnitude < GuiRadarView::grid_scale_size; scale_magnitude++)
+    // initialize grid colors for different zoom magnitudes
+    for (int scale_magnitude = 0 ; scale_magnitude < GuiRadarView::grid_scale_size - 1; scale_magnitude++)
     {
-        grid_colors[scale_magnitude] = sf::Color(63 + 64 * scale_magnitude, 64 + 32 * scale_magnitude, 128, 128);
+        sf::Uint8 colorStep = scale_magnitude * (-128 / (GuiRadarView::grid_scale_size));
+        grid_colors[scale_magnitude] = sf::Color(65 + colorStep * 0.5, 65 + colorStep * 0.3, 129 + colorStep, 128);
     }
+    // last color is white
+    grid_colors[GuiRadarView::grid_scale_size - 1] = sf::Color(255, 255, 255, 128);
 }
 
 void GuiRadarView::onDraw(sf::RenderTarget& window)
@@ -205,6 +209,7 @@ int GuiRadarView::calcGridScaleMagnitude(int scale_magnitude, int position)
             return std::min(scale_magnitude + i, GuiRadarView::grid_scale_size - 1);
         }
     }
+    return scale_magnitude;
 }
 
 void GuiRadarView::drawSectorGrid(sf::RenderTarget& window)
