@@ -15,10 +15,14 @@ GuiRadarView::GuiRadarView(GuiContainer* owner, string id, float distance, Targe
 , range_indicator_step_size(0.0f), style(Circular), fog_style(NoFogOfWar), mouse_down_func(nullptr), mouse_drag_func(nullptr), mouse_up_func(nullptr)
 {
     auto_center_on_my_ship = true;
-    for (int scale_magnitude = 0 ; scale_magnitude < GuiRadarView::grid_scale_size; scale_magnitude++)
+    // initialize grid colors for different zoom magnitudes
+    for (int scale_magnitude = 0 ; scale_magnitude < GuiRadarView::grid_scale_size - 1; scale_magnitude++)
     {
-        grid_colors[scale_magnitude] = sf::Color(63 + 64 * scale_magnitude, 64 + 32 * scale_magnitude, 128, 128);
+        sf::Uint8 colorStep = scale_magnitude * (-128 / (GuiRadarView::grid_scale_size));
+        grid_colors[scale_magnitude] = sf::Color(65 + colorStep * 0.5, 65 + colorStep * 0.3, 129 + colorStep, 128);
     }
+    // last color is white
+    grid_colors[GuiRadarView::grid_scale_size - 1] = sf::Color(255, 255, 255, 128);
 }
 
 void GuiRadarView::onDraw(sf::RenderTarget& window)
@@ -205,6 +209,7 @@ int GuiRadarView::calcGridScaleMagnitude(int scale_magnitude, int position)
             return std::min(scale_magnitude + i, GuiRadarView::grid_scale_size - 1);
         }
     }
+    return scale_magnitude;
 }
 
 void GuiRadarView::drawSectorGrid(sf::RenderTarget& window)
@@ -220,8 +225,6 @@ void GuiRadarView::drawSectorGrid(sf::RenderTarget& window)
     int sector_x_max = floor((view_position.x + (rect.left + rect.width - radar_screen_center.x) / scale) / sector_size_scaled);
     int sector_y_min = floor((view_position.y - (radar_screen_center.y - rect.top) / scale) / sector_size_scaled) + 1;
     int sector_y_max = floor((view_position.y + (rect.top + rect.height - radar_screen_center.y) / scale) / sector_size_scaled);
- //   sf::Color baseColor(63 + 64 * scale_magnitude, 64 + 32 * scale_magnitude, 128, 128);
- //   sf::Color nextColor = baseColor + sf::Color(64, 32, 0, 0);
     for(int sector_x = sector_x_min - 1; sector_x <= sector_x_max; sector_x++)
     {
         float x = radar_screen_center.x + ((sector_x * sector_size_scaled) - view_position.x) * scale;
@@ -229,7 +232,6 @@ void GuiRadarView::drawSectorGrid(sf::RenderTarget& window)
         {
             float y = radar_screen_center.y + ((sector_y * sector_size_scaled) - view_position.y) * scale;
             string name = getSectorName(sf::Vector2f(sector_x * sector_size_scaled + 1, sector_y * sector_size_scaled + 1));
-        //    sf::Color color = sector_x % (int)sub_sectors_count || sector_y % (int)sub_sectors_count ? baseColor : nextColor;
             sf::Color color = grid_colors[std::min(calcGridScaleMagnitude(scale_magnitude, sector_x), calcGridScaleMagnitude(scale_magnitude, sector_y))];
             drawText(window, sf::FloatRect(x, y, 30, 30), name, ATopLeft, 30, bold_font, color);
         }
@@ -239,7 +241,6 @@ void GuiRadarView::drawSectorGrid(sf::RenderTarget& window)
     for(int sector_x = sector_x_min; sector_x <= sector_x_max; sector_x++)
     {
         float x = radar_screen_center.x + ((sector_x * sector_size_scaled) - view_position.x) * scale;
-        //sf::Color color = sector_x % (int)sub_sectors_count ? baseColor : nextColor;
         sf::Color color = grid_colors[calcGridScaleMagnitude(scale_magnitude, sector_x)];
         lines_x[(sector_x - sector_x_min)*2].position = sf::Vector2f(x, rect.top);
         lines_x[(sector_x - sector_x_min)*2].color = color;
@@ -249,7 +250,6 @@ void GuiRadarView::drawSectorGrid(sf::RenderTarget& window)
     for(int sector_y = sector_y_min; sector_y <= sector_y_max; sector_y++)
     {
         float y = radar_screen_center.y + ((sector_y * sector_size_scaled) - view_position.y) * scale;
-        //sf::Color color = sector_y % (int)sub_sectors_count ? baseColor : nextColor;
         sf::Color color = grid_colors[calcGridScaleMagnitude(scale_magnitude, sector_y)];
         lines_y[(sector_y - sector_y_min)*2].position = sf::Vector2f(rect.left, y);
         lines_y[(sector_y - sector_y_min)*2].color = color;
