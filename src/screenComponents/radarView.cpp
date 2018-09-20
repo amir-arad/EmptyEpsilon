@@ -218,7 +218,8 @@ void GuiRadarView::drawSectorGrid(sf::RenderTarget& window)
         for(int sector_y = sector_y_min - 1; sector_y <= sector_y_max; sector_y++)
         {
             float y = radar_screen_center.y + ((sector_y * sector_size) - view_position.y) * scale;
-            drawText(window, sf::FloatRect(x, y, 30, 30), getSectorName(sf::Vector2f(sector_x * sector_size + sub_sector_size, sector_y * sector_size + sub_sector_size)), ATopLeft, 30, bold_font, color);
+            string name = getSectorName(sf::Vector2f(sector_x * sector_size + 1, sector_y * sector_size + 1));
+            drawText(window, sf::FloatRect(x, y, 30, 30), name, ATopLeft, 30, bold_font, color);
         }
     }
     sf::VertexArray lines_x(sf::Lines, 2 * (sector_x_max - sector_x_min + 1));
