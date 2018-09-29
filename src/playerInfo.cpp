@@ -2,6 +2,8 @@
 #include "screens/mainScreen.h"
 #include "screens/crewStationScreen.h"
 
+#include "screens/helios/navigationScreen.h"
+
 #include "screens/crew6/helmsScreen.h"
 #include "screens/crew6/weaponsScreen.h"
 #include "screens/crew6/engineeringScreen.h"
@@ -164,7 +166,7 @@ void PlayerInfo::spawnUI()
         if (crew_position[relayRadar])
             screen->addStationTab(new RadarScreen(screen,"relay"), relayRadar, getCrewPositionName(relayRadar), getCrewPositionIcon(relayRadar));
         if (crew_position[navigator])
-            screen->addStationTab(new RadarScreen(screen,"navigator"), navigator, getCrewPositionName(navigator), getCrewPositionIcon(navigator));
+            screen->addStationTab(new NavigationScreen(screen), navigator, getCrewPositionName(navigator), getCrewPositionIcon(navigator));
         //Ship log screen, if you have comms, you have ships log. (note this is mostly replaced by the [at the bottom of the screen openable log]
         if (crew_position[singlePilot])
             screen->addStationTab(new ShipLogScreen(screen), max_crew_positions, "Ships log", "");

@@ -33,14 +33,8 @@ RadarScreen::RadarScreen(GuiContainer* owner,string type)
       relay_radar->setAutoCentering(true);
       relay_radar->longRange()->enableWaypoints()->enableCallsigns()->setStyle(GuiRadarView::Rectangular)->setFogOfWarStyle(GuiRadarView::FriendlysShortRangeFogOfWar);
       relay_radar->show();
-    } else if (type == "navigator"){
-      relay_radar = new GuiRadarView(this, "NAVIGATOR", 50000.0f, nullptr);
-      relay_radar->setPosition(0, 0, ATopLeft)->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
-      relay_radar->setAutoCentering(true);
-      relay_radar->longRange()->enableWaypoints()->enableCallsigns()->setStyle(GuiRadarView::Rectangular)->setFogOfWarStyle(GuiRadarView::NoObjects);
-      relay_radar->show();
-    }
-    
+    } 
+        
     new GuiJumpIndicator(this);
     new GuiSelfDestructIndicator(this);
     new GuiGlobalMessage(this);
