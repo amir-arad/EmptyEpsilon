@@ -597,6 +597,8 @@ void GuiRadarView::drawObjects(sf::RenderTarget& window_normal, sf::RenderTarget
             visible_objects.insert(*obj);
         }
         break;
+    case NoObjects: 
+        break;
     }
 
     for(SpaceObject* obj : visible_objects)

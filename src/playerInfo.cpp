@@ -163,6 +163,8 @@ void PlayerInfo::spawnUI()
             screen->addStationTab(new RadarScreen(screen,"science"), scienceRadar, getCrewPositionName(scienceRadar), getCrewPositionIcon(scienceRadar));
         if (crew_position[relayRadar])
             screen->addStationTab(new RadarScreen(screen,"relay"), relayRadar, getCrewPositionName(relayRadar), getCrewPositionIcon(relayRadar));
+        if (crew_position[navigator])
+            screen->addStationTab(new RadarScreen(screen,"navigator"), navigator, getCrewPositionName(navigator), getCrewPositionIcon(navigator));
         //Ship log screen, if you have comms, you have ships log. (note this is mostly replaced by the [at the bottom of the screen openable log]
         if (crew_position[singlePilot])
             screen->addStationTab(new ShipLogScreen(screen), max_crew_positions, "Ships log", "");
@@ -214,6 +216,7 @@ string getCrewPositionName(ECrewPosition position)
     case tacticalRadar: return "Tactical Radar";
     case scienceRadar: return "Science Radar";
     case relayRadar: return "Relay Radar";
+    case navigator: return "Navigator";
     default: return "ErrUnk: " + string(position);
     }
 }
@@ -239,6 +242,7 @@ string getCrewPositionIcon(ECrewPosition position)
     case tacticalRadar: return "";
     case scienceRadar: return "";
     case relayRadar: return "";
+    case navigator: return "";
     default: return "ErrUnk: " + string(position);
     }
 }
@@ -287,6 +291,8 @@ template<> void convert<ECrewPosition>::param(lua_State* L, int& idx, ECrewPosit
         cp = scienceRadar;
     else if (str == "relayradar" || str == "relayradarview")
         cp = relayRadar;
+    else if (str == "navigator" || str == "navigatorview")
+        cp = navigator;
     else
         luaL_error(L, "Unknown value for crew position: %s", str.c_str());
 }

@@ -21,7 +21,8 @@ public:
     {
         NoFogOfWar,
         NebulaFogOfWar,
-        FriendlysShortRangeFogOfWar
+        FriendlysShortRangeFogOfWar,
+        NoObjects
     };
 
     typedef std::function<void(sf::Vector2f position)> func_t;

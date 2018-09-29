@@ -26,7 +26,8 @@ enum ECrewPosition
     tacticalRadar,
     scienceRadar,
     relayRadar,
-
+    navigator,
+    
     max_crew_positions
 };
 
