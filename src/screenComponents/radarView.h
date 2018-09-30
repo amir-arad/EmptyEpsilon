@@ -2,15 +2,14 @@
 #define RADAR_VIEW_H
 
 #include "gui/gui2_element.h"
+#include "sectorsView.h"
 
 class GuiMissileTubeControls;
 class TargetsContainer;
 
-class GuiRadarView : public GuiElement
+class GuiRadarView : public SectorsView
 {
 public:
-    static const int grid_scale_size = 5;
-
     enum ERadarStyle
     {
         Rectangular,
@@ -31,9 +30,6 @@ private:
     sf::RenderTexture background_texture;
     sf::RenderTexture forground_texture;
     sf::RenderTexture mask_texture;
-    sf::Color grid_colors [GuiRadarView::grid_scale_size];
-   
-    const float sub_sectors_count = 8;
 
     class GhostDot
     {
@@ -51,8 +47,6 @@ private:
     TargetsContainer* targets;
     GuiMissileTubeControls* missile_tube_controls;
 
-    float distance;
-    sf::Vector2f view_position;
     bool long_range;
     bool show_ghost_dots;
     bool show_waypoints;
@@ -77,8 +71,7 @@ public:
 
     virtual void onDraw(sf::RenderTarget& window);
 
-    GuiRadarView* setDistance(float distance) { this->distance = distance; return this; }
-    float getDistance() { return distance; }
+    virtual GuiRadarView* setDistance(float distance) { SectorsView::setDistance(distance); return this; }
     GuiRadarView* setRangeIndicatorStepSize(float step) { range_indicator_step_size = step; return this; }
     GuiRadarView* longRange() { long_range = true; return this; }
     GuiRadarView* shortRange() { long_range = false; return this; }
@@ -102,11 +95,7 @@ public:
     GuiRadarView* setCallbacks(func_t mouse_down_func, func_t mouse_drag_func, func_t mouse_up_func) { this->mouse_down_func = mouse_down_func; this->mouse_drag_func = mouse_drag_func; this->mouse_up_func = mouse_up_func; return this; }
     GuiRadarView* setJoystickCallbacks(ffunc_t joystick_x_func, ffunc_t joystick_y_func, ffunc_t joystick_z_func, ffunc_t joystick_r_func)
                   { this->joystick_x_func = joystick_x_func; this->joystick_y_func = joystick_y_func; this->joystick_z_func = joystick_z_func; this->joystick_r_func = joystick_r_func; return this; }
-    GuiRadarView* setViewPosition(sf::Vector2f view_position) { this->view_position = view_position; return this; }
-    sf::Vector2f getViewPosition() { return view_position; }
-
-    sf::Vector2f worldToScreen(sf::Vector2f world_position);
-    sf::Vector2f screenToWorld(sf::Vector2f screen_position);
+    virtual GuiRadarView* setViewPosition(sf::Vector2f view_position) { SectorsView::setViewPosition(view_position); return this; }
 
     virtual bool onMouseDown(sf::Vector2f position);
     virtual void onMouseDrag(sf::Vector2f position);
@@ -114,12 +103,9 @@ public:
     virtual bool onJoystickXYMove(sf::Vector2f position);
     virtual bool onJoystickZMove(float position);
     virtual bool onJoystickRMove(float position);
-protected:
-    virtual void drawBackground(sf::RenderTarget& window);
 private:
     void updateGhostDots();
-    int calcGridScaleMagnitude(int scale_magnitude, int position);
-    void drawSectorGrid(sf::RenderTarget& window);
+    void drawBackground(sf::RenderTarget& window);
     void drawNebulaBlockedAreas(sf::RenderTarget& window);
     void drawNoneFriendlyBlockedAreas(sf::RenderTarget& window);
     void drawFriendlyNotVisibleAreas(sf::RenderTarget& window);
