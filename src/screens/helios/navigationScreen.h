@@ -2,9 +2,10 @@
 #define NAVIGATION_SCREEN_H
 
 #include "screenComponents/targetsContainer.h"
+#include "screenComponents/navigationView.h"
 #include "gui/gui2_overlay.h"
 
-class GuiRadarView;
+class NavigationView;
 class GuiKeyValueDisplay;
 class GuiAutoLayout;
 class GuiButton;
@@ -27,7 +28,7 @@ private:
     EMode mode;
     TargetsContainer targets;
     int drag_waypoint_index;
-    GuiRadarView* radar;
+    NavigationView* radar;
     GuiAutoLayout* option_buttons;
     GuiAutoLayout* view_controls;
     GuiButton* delete_waypoint_button;

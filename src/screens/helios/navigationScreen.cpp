@@ -1,11 +1,11 @@
-#include "navigationScreen.h"
 #include "playerInfo.h"
+#include "navigationScreen.h"
 #include "spaceObjects/playerSpaceship.h"
 #include "spaceObjects/scanProbe.h"
 #include "scriptInterface.h"
 #include "gameGlobalInfo.h"
 
-#include "screenComponents/radarView.h"
+#include "screenComponents/navigationView.h"
 #include "screenComponents/openCommsButton.h"
 #include "screenComponents/commsOverlay.h"
 #include "screenComponents/shipsLogControl.h"
@@ -22,6 +22,8 @@
 
 #include "PerlinNoise.h"
 #include "SimplexNoise.hpp"
+
+/*
 class NavigationView : public GuiRadarView
 {
     private:
@@ -47,49 +49,46 @@ NavigationView::NavigationView(GuiContainer *owner, string id, float distance, T
     enableWaypoints();
     //   enableCallsigns();
     setStyle(GuiRadarView::Rectangular);
-    setFogOfWarStyle(GuiRadarView::NoObjects);
+  //  setFogOfWarStyle(GuiRadarView::CosmicMap);
     
-    pixels = std::unique_ptr<sf::Uint8[]>(new sf::Uint8[width * height * 4]);
-    noiseGenerator.setOctaves(5);
-    noiseGenerator.setFrequency(2.0f);
-    noiseGenerator.setPersistence(0.45f);
-    noiseTexture.create(width, height);
+    // pixels = std::unique_ptr<sf::Uint8[]>(new sf::Uint8[width * height * 4]);
+    // noiseGenerator.setOctaves(5);
+    // noiseGenerator.setFrequency(2.0f);
+    // noiseGenerator.setPersistence(0.45f);
+    // noiseTexture.create(width, height);
+    noiseTexture.loadFromFile("resources/cosmic-map-1.png");
 }
 void NavigationView::drawBackground(sf::RenderTarget &window)
 {
-    for (std::size_t y = 0; y < height; ++y)
-    {
-        for (std::size_t x = 0; x < width; ++x)
-        {
-            float xPos = float(x) / float(width) - 0.5f;
-            float yPos = float(y) / float(height) - 0.5f;
+    // for (std::size_t y = 0; y < height; ++y)
+    // {
+    //     for (std::size_t x = 0; x < width; ++x)
+    //     {
+    //         float xPos = float(x) / float(width) - 0.5f;
+    //         float yPos = float(y) / float(height) - 0.5f;
 
-            float elevation = noiseGenerator.unsignedOctave(xPos, yPos);
-            elevation = pow(elevation, 1.5f); //redistribution
-            sf::Color color = sf::Color(elevation * 255, elevation * 255, elevation * 255, elevation * 255);
-            pixels[4 * (y * width + x)] = color.r;
-            pixels[4 * (y * width + x) + 1] = color.g;
-            pixels[4 * (y * width + x) + 2] = color.b;
-            pixels[4 * (y * width + x) + 3] = color.a;
-            // setPixel(x, y, elevation);
-        }
-    }
-
-    noiseTexture.update(pixels.get());
+    //         float elevation = noiseGenerator.unsignedOctave(xPos, yPos);
+    //         elevation = pow(elevation, 1.5f); //redistribution
+    //         sf::Color color = sf::Color(elevation * 255, elevation * 255, elevation * 255, elevation * 255);
+    //         pixels[4 * (y * width + x)] = color.r;
+    //         pixels[4 * (y * width + x) + 1] = color.g;
+    //         pixels[4 * (y * width + x) + 2] = color.b;
+    //         pixels[4 * (y * width + x) + 3] = color.a;
+    //         // setPixel(x, y, elevation);
+    //     }
+    // }
+    // noiseTexture.update(pixels.get());
 
     window.clear(sf::Color(100, 20, 20, 255));
     noiseSprite.setTexture(noiseTexture);
     window.draw(noiseSprite);
 }
+*/
 
 NavigationScreen::NavigationScreen(GuiContainer *owner)
     : GuiOverlay(owner, "NAVIGATION_SCREEN", colorConfig.background), mode(TargetSelection)
 {
-    // PerlinNoise pn;
-    // double noise = pn.noise(0.45, 0.8, 0.55);
-
     targets.setAllowWaypointSelection();
-
     radar = new NavigationView(this, "NAVIGATION_RADAR", 50000.0f, &targets);
     radar->setPosition(0, 0, ATopLeft)->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
     radar->setCallbacks(

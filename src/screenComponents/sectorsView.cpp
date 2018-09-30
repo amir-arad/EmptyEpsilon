@@ -10,7 +10,8 @@
 #include "missileTubeControls.h"
 #include "targetsContainer.h"
 
-SectorsView::SectorsView(GuiContainer *owner, string id, float distance) : GuiElement(owner, id), distance(distance)
+SectorsView::SectorsView(GuiContainer *owner, string id, float distance, TargetsContainer* targets) :
+ GuiElement(owner, id), distance(distance), targets(targets),  mouse_down_func(nullptr), mouse_drag_func(nullptr), mouse_up_func(nullptr)
 {
     // initialize grid colors for different zoom magnitudes
     for (int scale_magnitude = 0; scale_magnitude < SectorsView::grid_scale_size - 1; scale_magnitude++)
@@ -115,4 +116,79 @@ void SectorsView::drawSectorGrid(sf::RenderTarget &window)
         }
     }
     window.draw(points);
+}
+
+void SectorsView::drawTargets(sf::RenderTarget& window)
+{
+    if (!targets)
+        return;
+
+    sf::Vector2f radar_screen_center(rect.left + rect.width / 2.0f, rect.top + rect.height / 2.0f);
+
+    sf::Sprite target_sprite;
+    textureManager.setTexture(target_sprite, "redicule.png");
+
+    for(P<SpaceObject> obj : targets->getTargets())
+    {
+        sf::Vector2f object_position_on_screen = radar_screen_center + (obj->getPosition() - getViewPosition()) * getScale();
+        float r = obj->getRadius() * getScale();
+        sf::FloatRect object_rect(object_position_on_screen.x - r, object_position_on_screen.y - r, r * 2, r * 2);
+        if (obj != my_spaceship && rect.intersects(object_rect))
+        {
+            target_sprite.setPosition(object_position_on_screen);
+            window.draw(target_sprite);
+        }
+    }
+
+    if (my_spaceship && targets->getWaypointIndex() > -1 && targets->getWaypointIndex() < my_spaceship->getWaypointCount())
+    {
+        sf::Vector2f object_position_on_screen = radar_screen_center + (my_spaceship->waypoints[targets->getWaypointIndex()] - getViewPosition()) * getScale();
+
+        target_sprite.setPosition(object_position_on_screen - sf::Vector2f(0, 10));
+        window.draw(target_sprite);
+    }
+}
+
+bool SectorsView::onMouseDown(sf::Vector2f position)
+{
+    if (!mouse_down_func && !mouse_drag_func && !mouse_up_func)
+        return false;
+    if (mouse_down_func)
+        mouse_down_func(screenToWorld(position));
+    return true;
+}
+
+void SectorsView::onMouseDrag(sf::Vector2f position)
+{
+    if (mouse_drag_func)
+        mouse_drag_func(screenToWorld(position));
+}
+
+void SectorsView::onMouseUp(sf::Vector2f position)
+{
+    if (mouse_up_func)
+        mouse_up_func(screenToWorld(position));
+}
+
+bool SectorsView::onJoystickXYMove(sf::Vector2f position)
+{
+    if (joystick_x_func)
+        joystick_x_func(position.x);
+    if (joystick_y_func)
+        joystick_y_func(position.y);
+    return true;
+}
+
+bool SectorsView::onJoystickZMove(float position)
+{
+    if (joystick_z_func)
+        joystick_z_func(position);
+    return true;
+}
+
+bool SectorsView::onJoystickRMove(float position)
+{
+    if (joystick_r_func)
+        joystick_r_func(position);
+    return true;
 }

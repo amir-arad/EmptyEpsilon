@@ -11,7 +11,7 @@
 #include "targetsContainer.h"
 
 GuiRadarView::GuiRadarView(GuiContainer* owner, string id, float distance, TargetsContainer* targets)
-: SectorsView(owner, id, distance), next_ghost_dot_update(0.0), targets(targets), missile_tube_controls(nullptr), long_range(false), show_ghost_dots(false)
+: SectorsView(owner, id, distance, targets), next_ghost_dot_update(0.0), missile_tube_controls(nullptr), long_range(false), show_ghost_dots(false)
 , show_waypoints(false), show_target_projection(false), show_missile_tubes(false), show_callsigns(false), show_heading_indicators(false), show_game_master_data(false)
 , range_indicator_step_size(0.0f), style(Circular), fog_style(NoFogOfWar), mouse_down_func(nullptr), mouse_drag_func(nullptr), mouse_up_func(nullptr)
 {
@@ -404,9 +404,9 @@ void GuiRadarView::drawTargetProjections(sf::RenderTarget& window)
         }
     }
 
-    if (targets)
+    if (getTargets())
     {
-        for(P<SpaceObject> obj : targets->getTargets())
+        for(P<SpaceObject> obj : getTargets()->getTargets())
         {
             if (obj->getVelocity() < 1.0f)
                 continue;
@@ -549,37 +549,6 @@ void GuiRadarView::drawObjectsGM(sf::RenderTarget& window)
     }
 }
 
-void GuiRadarView::drawTargets(sf::RenderTarget& window)
-{
-    if (!targets)
-        return;
-
-    sf::Vector2f radar_screen_center(rect.left + rect.width / 2.0f, rect.top + rect.height / 2.0f);
-
-    sf::Sprite target_sprite;
-    textureManager.setTexture(target_sprite, "redicule.png");
-
-    for(P<SpaceObject> obj : targets->getTargets())
-    {
-        sf::Vector2f object_position_on_screen = radar_screen_center + (obj->getPosition() - getViewPosition()) * getScale();
-        float r = obj->getRadius() * getScale();
-        sf::FloatRect object_rect(object_position_on_screen.x - r, object_position_on_screen.y - r, r * 2, r * 2);
-        if (obj != my_spaceship && rect.intersects(object_rect))
-        {
-            target_sprite.setPosition(object_position_on_screen);
-            window.draw(target_sprite);
-        }
-    }
-
-    if (my_spaceship && targets->getWaypointIndex() > -1 && targets->getWaypointIndex() < my_spaceship->getWaypointCount())
-    {
-        sf::Vector2f object_position_on_screen = radar_screen_center + (my_spaceship->waypoints[targets->getWaypointIndex()] - getViewPosition()) * getScale();
-
-        target_sprite.setPosition(object_position_on_screen - sf::Vector2f(0, 10));
-        window.draw(target_sprite);
-    }
-}
-
 void GuiRadarView::drawHeadingIndicators(sf::RenderTarget& window)
 {
     sf::Vector2f radar_screen_center(rect.left + rect.width / 2.0f, rect.top + rect.height / 2.0f);
@@ -638,7 +607,6 @@ void GuiRadarView::drawRadarCutoff(sf::RenderTarget& window)
     window.draw(rectRight);
 }
 
-
 bool GuiRadarView::onMouseDown(sf::Vector2f position)
 {
     if (style == Circular || style == CircularMasked)
@@ -647,44 +615,5 @@ bool GuiRadarView::onMouseDown(sf::Vector2f position)
         if (position - getCenterPoint() > radius)
             return false;
     }
-    if (!mouse_down_func && !mouse_drag_func && !mouse_up_func)
-        return false;
-    if (mouse_down_func)
-        mouse_down_func(screenToWorld(position));
-    return true;
-}
-
-void GuiRadarView::onMouseDrag(sf::Vector2f position)
-{
-    if (mouse_drag_func)
-        mouse_drag_func(screenToWorld(position));
-}
-
-void GuiRadarView::onMouseUp(sf::Vector2f position)
-{
-    if (mouse_up_func)
-        mouse_up_func(screenToWorld(position));
-}
-
-bool GuiRadarView::onJoystickXYMove(sf::Vector2f position)
-{
-    if (joystick_x_func)
-        joystick_x_func(position.x);
-    if (joystick_y_func)
-        joystick_y_func(position.y);
-    return true;
-}
-
-bool GuiRadarView::onJoystickZMove(float position)
-{
-    if (joystick_z_func)
-        joystick_z_func(position);
-    return true;
-}
-
-bool GuiRadarView::onJoystickRMove(float position)
-{
-    if (joystick_r_func)
-        joystick_r_func(position);
-    return true;
+    return SectorsView::onMouseDown(position);
 }
