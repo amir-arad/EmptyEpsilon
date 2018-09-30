@@ -20,13 +20,77 @@
 #include "gui/gui2_togglebutton.h"
 #include "gui/gui2_textentry.h"
 
-NavigationScreen::NavigationScreen(GuiContainer* owner)
-: GuiOverlay(owner, "NAVIGATION_SCREEN", colorConfig.background),mode(TargetSelection)
+#include "PerlinNoise.h"
+#include "SimplexNoise.hpp"
+class NavigationView : public GuiRadarView
 {
+    private:
+    std::unique_ptr<sf::Uint8[]> pixels;
+    sf::Texture noiseTexture;
+    sf::Sprite noiseSprite;
+    SimplexNoise noiseGenerator;
+    
+    int height = 2048;
+    int width =2048;
+  public:
+    NavigationView(GuiContainer *owner, string id, float distance, TargetsContainer *targets);
+
+  protected:
+    virtual void drawBackground(sf::RenderTarget &window);
+};
+
+NavigationView::NavigationView(GuiContainer *owner, string id, float distance, TargetsContainer *targets)
+    : GuiRadarView(owner, id, distance, targets)
+{
+    setAutoCentering(false);
+    longRange();
+    enableWaypoints();
+    //   enableCallsigns();
+    setStyle(GuiRadarView::Rectangular);
+    setFogOfWarStyle(GuiRadarView::NoObjects);
+    
+    pixels = std::unique_ptr<sf::Uint8[]>(new sf::Uint8[width * height * 4]);
+    noiseGenerator.setOctaves(5);
+    noiseGenerator.setFrequency(2.0f);
+    noiseGenerator.setPersistence(0.45f);
+    noiseTexture.create(width, height);
+}
+void NavigationView::drawBackground(sf::RenderTarget &window)
+{
+    for (std::size_t y = 0; y < height; ++y)
+    {
+        for (std::size_t x = 0; x < width; ++x)
+        {
+            float xPos = float(x) / float(width) - 0.5f;
+            float yPos = float(y) / float(height) - 0.5f;
+
+            float elevation = noiseGenerator.unsignedOctave(xPos, yPos);
+            elevation = pow(elevation, 1.5f); //redistribution
+            sf::Color color = sf::Color(elevation * 255, elevation * 255, elevation * 255, elevation * 255);
+            pixels[4 * (y * width + x)] = color.r;
+            pixels[4 * (y * width + x) + 1] = color.g;
+            pixels[4 * (y * width + x) + 2] = color.b;
+            pixels[4 * (y * width + x) + 3] = color.a;
+            // setPixel(x, y, elevation);
+        }
+    }
+
+    noiseTexture.update(pixels.get());
+
+    window.clear(sf::Color(100, 20, 20, 255));
+    noiseSprite.setTexture(noiseTexture);
+    window.draw(noiseSprite);
+}
+
+NavigationScreen::NavigationScreen(GuiContainer *owner)
+    : GuiOverlay(owner, "NAVIGATION_SCREEN", colorConfig.background), mode(TargetSelection)
+{
+    // PerlinNoise pn;
+    // double noise = pn.noise(0.45, 0.8, 0.55);
+
     targets.setAllowWaypointSelection();
-    radar = new GuiRadarView(this, "NAVIGATION_RADAR", 50000.0f, &targets);
-    radar->longRange()->enableWaypoints()->enableCallsigns()->setStyle(GuiRadarView::Rectangular)->setFogOfWarStyle(GuiRadarView::NoObjects);
-    radar->setAutoCentering(false);
+
+    radar = new NavigationView(this, "NAVIGATION_RADAR", 50000.0f, &targets);
     radar->setPosition(0, 0, ATopLeft)->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
     radar->setCallbacks(
         [this](sf::Vector2f position) { //down
@@ -46,14 +110,14 @@ NavigationScreen::NavigationScreen(GuiContainer* owner)
                 sector_name_custom = false;
                 sf::Vector2f newPosition = radar->getViewPosition() - (position - mouse_down_position);
                 radar->setViewPosition(newPosition);
-                if(!sector_name_custom)
+                if (!sector_name_custom)
                     sector_name_text->setText(getSectorName(newPosition));
             }
             if (mode == MoveWaypoint && my_spaceship)
                 my_spaceship->commandMoveWaypoint(drag_waypoint_index, position);
         },
         [this](sf::Vector2f position) { //up
-            switch(mode)
+            switch (mode)
             {
             case TargetSelection:
                 targets.setToClosestTo(position, 1000, TargetsContainer::Targetable);
@@ -69,13 +133,12 @@ NavigationScreen::NavigationScreen(GuiContainer* owner)
                 targets.setWaypointIndex(drag_waypoint_index);
                 break;
             }
-        }
-    );
+        });
 
     if (my_spaceship)
         radar->setViewPosition(my_spaceship->getPosition());
 
-// TODO terrain data
+    // TODO terrain data
     // GuiAutoLayout* sidebar = new GuiAutoLayout(this, "SIDE_BAR", GuiAutoLayout::LayoutVerticalTopToBottom);
     // sidebar->setPosition(-20, 150, ATopRight)->setSize(250, GuiElement::GuiSizeMax);
 
@@ -99,11 +162,11 @@ NavigationScreen::NavigationScreen(GuiContainer* owner)
     sector_name_custom = false;
     sector_name_text = new GuiTextEntry(view_controls, "SECTOR_NAME_TEXT", "");
     sector_name_text->setSize(GuiElement::GuiSizeMax, 50);
-    sector_name_text->callback([this](string text){
+    sector_name_text->callback([this](string text) {
         sector_name_custom = true;
     });
     sector_name_text->validator(isValidSectorName);
-    sector_name_text->enterCallback([this](string text){
+    sector_name_text->enterCallback([this](string text) {
         sector_name_custom = false;
         if (sector_name_text->isValid())
         {
@@ -120,7 +183,8 @@ NavigationScreen::NavigationScreen(GuiContainer* owner)
     (new GuiButton(option_buttons, "WAYPOINT_PLACE_BUTTON", "Place Waypoint", [this]() {
         mode = WaypointPlacement;
         option_buttons->hide();
-    }))->setSize(GuiElement::GuiSizeMax, 50);
+    }))
+        ->setSize(GuiElement::GuiSizeMax, 50);
 
     delete_waypoint_button = new GuiButton(option_buttons, "WAYPOINT_DELETE_BUTTON", "Delete Waypoint", [this]() {
         if (my_spaceship && targets.getWaypointIndex() >= 0)
@@ -133,7 +197,7 @@ NavigationScreen::NavigationScreen(GuiContainer* owner)
     (new GuiCustomShipFunctions(this, navigator, ""))->setPosition(-20, 240, ATopRight)->setSize(250, GuiElement::GuiSizeMax);
 }
 
-void NavigationScreen::onDraw(sf::RenderTarget& window)
+void NavigationScreen::onDraw(sf::RenderTarget &window)
 {
     ///Handle mouse wheel
     float mouse_wheel_delta = InputHandler::getMouseWheelDelta();

@@ -114,10 +114,11 @@ public:
     virtual bool onJoystickXYMove(sf::Vector2f position);
     virtual bool onJoystickZMove(float position);
     virtual bool onJoystickRMove(float position);
+protected:
+    virtual void drawBackground(sf::RenderTarget& window);
 private:
     void updateGhostDots();
     int calcGridScaleMagnitude(int scale_magnitude, int position);
-    void drawBackground(sf::RenderTarget& window);
     void drawSectorGrid(sf::RenderTarget& window);
     void drawNebulaBlockedAreas(sf::RenderTarget& window);
     void drawNoneFriendlyBlockedAreas(sf::RenderTarget& window);

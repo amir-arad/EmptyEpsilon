@@ -136,6 +136,8 @@ set(SOURCES
 	src/screens/gm/tweak.cpp
 	src/screens/helios/navigationScreen.h
 	src/screens/helios/navigationScreen.cpp
+	src/screens/helios/simplexNoise.hpp
+	src/screens/helios/simplexNoise.cpp
 	src/screenComponents/aimLock.cpp
 	src/screenComponents/alertOverlay.cpp
 	src/screenComponents/helpOverlay.cpp

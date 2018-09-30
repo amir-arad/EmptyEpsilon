@@ -3,6 +3,7 @@
 #include "main.h"
 #include "gameGlobalInfo.h"
 #include "spaceObjects/nebula.h"
+#include "spaceObjects/blackHole.h"
 #include "spaceObjects/scanProbe.h"
 #include "playerInfo.h"
 #include "radarView.h"
@@ -598,6 +599,11 @@ void GuiRadarView::drawObjects(sf::RenderTarget& window_normal, sf::RenderTarget
         }
         break;
     case NoObjects: 
+        foreach(SpaceObject, obj, space_object_list)
+        {
+            if (P<Nebula>(obj) || P<BlackHole>(obj))
+                visible_objects.insert(*obj);
+        }
         break;
     }
 
