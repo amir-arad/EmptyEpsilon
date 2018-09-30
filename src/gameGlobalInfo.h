@@ -17,6 +17,15 @@ public:
     string textureName;
 };
 
+class TerrainInfo
+{
+public:
+    bool defined;
+    string textureName;
+    sf::Vector2f coordinates;
+    float scale; 
+};
+
 enum EPlayerWarpJumpDrive
 {
     PWJ_ShipDefault = 0,
@@ -85,6 +94,7 @@ public:
     //When active, all comms request goto the GM as chat, and normal scripted converstations are disabled. This does not disallow player<->player ship comms.
     bool intercept_all_comms_to_gm;
 
+    TerrainInfo terrain;
     GameGlobalInfo();
 
     P<PlayerSpaceship> getPlayerShip(int index);
@@ -112,6 +122,7 @@ public:
     virtual void destroy();
 
     string getNextShipCallsign();
+    void setTerrain(string textureName, sf::Vector2f coordinates, float scale);
 };
 
 string playerWarpJumpDriveToString(EPlayerWarpJumpDrive player_warp_jump_drive);

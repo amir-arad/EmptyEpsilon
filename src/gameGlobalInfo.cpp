@@ -25,6 +25,11 @@ GameGlobalInfo::GameGlobalInfo()
         registerMemberReplication(&nebula_info[n].vector);
         registerMemberReplication(&nebula_info[n].textureName);
     }
+    registerMemberReplication(&terrain.textureName);
+    registerMemberReplication(&terrain.scale);
+    registerMemberReplication(&terrain.coordinates);
+    registerMemberReplication(&terrain.defined);
+
     global_message_timeout = 0.0;
     player_warp_jump_drive_setting = PWJ_ShipDefault;
     scanning_complexity = SC_Normal;
@@ -35,7 +40,7 @@ GameGlobalInfo::GameGlobalInfo()
     allow_main_screen_long_range_radar = true;
     allow_main_screen_global_range_radar = true;
     allow_main_screen_ship_state = true;
-    
+    terrain.defined = false;
     intercept_all_comms_to_gm = false;
 
     registerMemberReplication(&scanning_complexity);
@@ -182,6 +187,13 @@ void GameGlobalInfo::destroy()
     MultiplayerObject::destroy();
     if (state_logger)
         state_logger->destroy();
+}
+
+void GameGlobalInfo::setTerrain(string textureName, sf::Vector2f coordinates, float scale){
+    terrain.defined = true;
+    terrain.textureName = textureName;
+    terrain.coordinates = coordinates;
+    terrain.scale = scale;
 }
 
 string playerWarpJumpDriveToString(EPlayerWarpJumpDrive player_warp_jump_drive)
@@ -411,3 +423,16 @@ static int playSoundFile(lua_State* L)
 /// Play a sound file on the server. Will work with any file supported by SFML (.wav, .ogg, .flac)
 /// Note that the sound is only played on the server. Not on any of the clients.
 REGISTER_SCRIPT_FUNCTION(playSoundFile);
+
+static int setTerrain(lua_State *L)
+{
+    string textureName = luaL_checkstring(L, 1);
+    float x = luaL_checknumber(L, 2);
+    float y = luaL_checknumber(L, 3);
+    float scale = luaL_checknumber(L, 4);
+    gameGlobalInfo->setTerrain(textureName, sf::Vector2f(x, y), scale);
+    return 0;
+}
+/// setTerrain(textureName, x, y, scale)
+/// set the terrain texture of the map
+REGISTER_SCRIPT_FUNCTION(setTerrain);

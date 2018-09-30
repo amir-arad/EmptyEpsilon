@@ -40,8 +40,8 @@ private:
     GuiLabel* zoom_label;
     
     sf::Vector2f mouse_down_position;
-    const float max_distance = 10000000.0f;
-    const float min_distance = 6250.0f;
+    const float max_distance = 10000000.0f; // has to match relay max_distance to have same zoom scale
+    const float min_distance = 909090.0f; // not to zoom in too much
 public:
     NavigationScreen(GuiContainer* owner);
 

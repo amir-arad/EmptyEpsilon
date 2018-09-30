@@ -16,30 +16,13 @@ NavigationView::NavigationView(GuiContainer* owner, string id, float distance, T
 
 void NavigationView::onDraw(sf::RenderTarget& window)
 {
-    //We need 3 textures:
-    // * background
-    // * forground
-    // * mask
-    // Depending on what type of radar we are rendering we can use the mask to mask out the forground and/or background textures before rendering them
-    // to the screen.
-
-    //New rendering method. Render to texture first, so we do not need the stencil buffer, as this causes issues with the post processing effects.
-    // Render background to screen
-    // Render sectors to screen
-    // Render range indicators to screen
-    // Clear texture with 0% alpha
-    // Render objects to texture
-    // Render fog to texture with 0% alpha
-    //      make fog result transparent, clearing anything that is in the fog.
-    //      We can use different blendmodes to get the effect we want, as we can mask out alphas with that.
-    // Render objects that are not effected by fog to texture
-    // Render texture to screen
-
     //Setup our textures for rendering
     adjustRenderTexture(background_texture);
     adjustRenderTexture(forground_texture);
 
-    background_texture.clear(sf::Color(50, 20, 50, 255));
+    background_texture.clear(sf::Color(30, 20, 30, 255));
+    
+    drawTerrain(background_texture);
 
     drawSectorGrid(background_texture);
 
@@ -68,8 +51,6 @@ void NavigationView::onDraw(sf::RenderTarget& window)
     //Render the final radar
     drawRenderTexture(background_texture, window);
     drawRenderTexture(forground_texture, window);
-    //if (style == Circular)
-    //    drawRadarCutoff(window);
 }
 
 void NavigationView::drawWaypoints(sf::RenderTarget& window)
@@ -104,7 +85,7 @@ void NavigationView::drawObjects(sf::RenderTarget& window_normal, sf::RenderTarg
     }
     for(SpaceObject* obj : visible_objects)
     {
-        sf::Vector2f object_position_on_screen = radar_screen_center + (obj->getPosition() - getViewPosition()) * getScale();
+        sf::Vector2f object_position_on_screen = worldToScreen(obj->getPosition());
         float r = obj->getRadius() * getScale();
         sf::FloatRect object_rect(object_position_on_screen.x - r, object_position_on_screen.y - r, r * 2, r * 2);
         if (obj != *my_spaceship && rect.intersects(object_rect))
@@ -117,7 +98,7 @@ void NavigationView::drawObjects(sf::RenderTarget& window_normal, sf::RenderTarg
     }
     if (my_spaceship)
     {
-        sf::Vector2f object_position_on_screen = radar_screen_center + (my_spaceship->getPosition() - getViewPosition()) * getScale();
+        sf::Vector2f object_position_on_screen = worldToScreen(my_spaceship->getPosition());
         my_spaceship->drawOnRadar(window_normal, object_position_on_screen, getScale(), true);
     }
 }

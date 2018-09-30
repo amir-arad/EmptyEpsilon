@@ -4,16 +4,11 @@
 #include "gui/gui2_element.h"
 #include "sectorsView.h"
 
-
 class NavigationView : public SectorsView
 {
-
   private:
     sf::RenderTexture background_texture;
     sf::RenderTexture forground_texture;
-    sf::RenderTexture mask_texture;
-
-
   public:
     NavigationView(GuiContainer *owner, string id, float distance, TargetsContainer *targets);
 

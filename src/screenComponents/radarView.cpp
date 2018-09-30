@@ -57,6 +57,8 @@ void GuiRadarView::onDraw(sf::RenderTarget& window)
 
     ///Draw the background texture
     drawBackground(background_texture);
+    if (show_game_master_data)
+        drawTerrain(background_texture);
     if (fog_style == NebulaFogOfWar || fog_style == FriendlysShortRangeFogOfWar)    //Mask the background color with the nebula blocked areas, but show the rest.
         drawRenderTexture(mask_texture, background_texture, sf::Color::White, sf::BlendMultiply);
     drawSectorGrid(background_texture);

@@ -72,6 +72,7 @@ public:
   protected:
     TargetsContainer * getTargets(){return targets;};
     void drawTargets(sf::RenderTarget &window);
+    void drawTerrain(sf::RenderTarget &window);
 private:
   int calcGridScaleMagnitude(int scale_magnitude, int position);
 };

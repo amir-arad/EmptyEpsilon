@@ -29,15 +29,13 @@ SectorsView::SectorsView(GuiContainer *owner, string id, float distance, Targets
 sf::Vector2f SectorsView::worldToScreen(sf::Vector2f world_position)
 {
     sf::Vector2f radar_screen_center(rect.left + rect.width / 2.0f, rect.top + rect.height / 2.0f);
-    float scale = std::min(rect.width, rect.height) / 2.0f / distance;
-    return radar_screen_center + (world_position - view_position) * scale;
+    return radar_screen_center + (world_position - view_position) * getScale();
 }
 
 sf::Vector2f SectorsView::screenToWorld(sf::Vector2f screen_position)
 {
     sf::Vector2f radar_screen_center(rect.left + rect.width / 2.0f, rect.top + rect.height / 2.0f);
-    float scale = std::min(rect.width, rect.height) / 2.0f / distance;
-    return view_position + (screen_position - radar_screen_center) / scale;
+    return view_position + (screen_position - radar_screen_center) / getScale();
 }
 
 int SectorsView::calcGridScaleMagnitude(int scale_magnitude, int position)
@@ -55,7 +53,7 @@ int SectorsView::calcGridScaleMagnitude(int scale_magnitude, int position)
 void SectorsView::drawSectorGrid(sf::RenderTarget &window)
 {
     sf::Vector2f radar_screen_center(rect.left + rect.width / 2.0f, rect.top + rect.height / 2.0f);
-    const float scale = std::min(rect.width, rect.height) / 2.0 / distance;
+    const float scale = getScale();
     const float factor = std::floor(std::log10(GameGlobalInfo::sector_size * scale));
     const int scale_magnitude = 2 - std::min(2.f, factor);
     const float sector_size_scaled = GameGlobalInfo::sector_size * std::pow(sub_sectors_count, scale_magnitude);
@@ -148,7 +146,17 @@ void SectorsView::drawTargets(sf::RenderTarget& window)
         window.draw(target_sprite);
     }
 }
-
+void SectorsView::drawTerrain(sf::RenderTarget &window){
+    if (gameGlobalInfo->terrain.defined){
+        sf::Sprite terrainMap;
+        textureManager.getTexture(gameGlobalInfo->terrain.textureName)->setSmooth(true);
+        textureManager.setTexture(terrainMap, gameGlobalInfo->terrain.textureName);
+        terrainMap.setPosition(worldToScreen(gameGlobalInfo->terrain.coordinates));
+        terrainMap.setScale(getScale() * gameGlobalInfo->terrain.scale, getScale()* gameGlobalInfo->terrain.scale);
+        terrainMap.setColor(sf::Color(255, 255, 255, 128)); // half transparent
+        window.draw(terrainMap);
+    }
+}
 bool SectorsView::onMouseDown(sf::Vector2f position)
 {
     if (!mouse_down_func && !mouse_drag_func && !mouse_up_func)
