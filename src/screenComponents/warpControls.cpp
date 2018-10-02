@@ -10,7 +10,7 @@ GuiWarpControls::GuiWarpControls(GuiContainer* owner, string id)
 : GuiElement(owner, id)
 {
     // Build warp request slider.
-    slider = new GuiSlider(this, id + "_SLIDER", 4.0, 0.0, 0.0, [this](float value) {
+    slider = new GuiSlider(this, id + "_SLIDER", my_spaceship->max_warp, 0.0, 0.0, [this](float value) {
         // Round the slider value to an int.
         int warp_level = value;
 
@@ -47,8 +47,10 @@ GuiWarpControls::GuiWarpControls(GuiContainer* owner, string id)
 void GuiWarpControls::onDraw(sf::RenderTarget& window)
 {
     // Update the label with the current warp factor.
-    if (my_spaceship)
+    if (my_spaceship){
         label->setValue(string(my_spaceship->current_warp, 1));
+        slider->setRange(my_spaceship->max_warp, 0);
+    }
 }
 
 void GuiWarpControls::onHotkey(const HotkeyResult& key)

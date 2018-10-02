@@ -554,25 +554,25 @@ void GuiRadarView::drawObjectsGM(sf::RenderTarget& window)
 void GuiRadarView::drawHeadingIndicators(sf::RenderTarget& window)
 {
     sf::Vector2f radar_screen_center(rect.left + rect.width / 2.0f, rect.top + rect.height / 2.0f);
-
+    float boundingRadius = std::min(rect.width, rect.height) / 2.0f;
     sf::VertexArray tigs(sf::Lines, 360/20*2);
     for(unsigned int n=0; n<360; n+=20)
     {
-        tigs[n/20*2].position = radar_screen_center + sf::vector2FromAngle(float(n) - 90) * (getScale() - 20);
-        tigs[n/20*2+1].position = radar_screen_center + sf::vector2FromAngle(float(n) - 90) * (getScale() - 40);
+        tigs[n/20*2].position = radar_screen_center + sf::vector2FromAngle(float(n) - 90) * (boundingRadius - 20);
+        tigs[n/20*2+1].position = radar_screen_center + sf::vector2FromAngle(float(n) - 90) * (boundingRadius - 40);
     }
     window.draw(tigs);
     sf::VertexArray small_tigs(sf::Lines, 360/5*2);
     for(unsigned int n=0; n<360; n+=5)
     {
-        small_tigs[n/5*2].position = radar_screen_center + sf::vector2FromAngle(float(n) - 90) * (getScale() - 20);
-        small_tigs[n/5*2+1].position = radar_screen_center + sf::vector2FromAngle(float(n) - 90) * (getScale() - 30);
+        small_tigs[n/5*2].position = radar_screen_center + sf::vector2FromAngle(float(n) - 90) * (boundingRadius - 20);
+        small_tigs[n/5*2+1].position = radar_screen_center + sf::vector2FromAngle(float(n) - 90) * (boundingRadius - 30);
     }
     window.draw(small_tigs);
     for(unsigned int n=0; n<360; n+=20)
     {
         sf::Text text(string(n), *main_font, 15);
-        text.setPosition(radar_screen_center + sf::vector2FromAngle(float(n) - 90) * (getScale() - 45));
+        text.setPosition(radar_screen_center + sf::vector2FromAngle(float(n) - 90) * (boundingRadius - 45));
         text.setOrigin(text.getLocalBounds().width / 2.0, text.getLocalBounds().height / 2.0);
         text.setRotation(n);
         window.draw(text);

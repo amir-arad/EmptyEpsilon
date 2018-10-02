@@ -91,6 +91,7 @@ SpaceShip::SpaceShip(string multiplayerClassName, float multiplayer_significant_
     has_warp_drive = true;
     warp_request = 0.0;
     current_warp = 0.0;
+    max_warp = 2.0;
     has_jump_drive = true;
     jump_drive_min_distance = 5000.0;
     jump_drive_max_distance = 50000.0;
@@ -465,6 +466,7 @@ void SpaceShip::update(float delta)
         }
         if ((docking_state == DS_Docked) || (docking_state == DS_Docking))
             warp_request = 0.0;
+        
     }
 
     float rotationDiff = sf::angleDifference(getRotation(), target_rotation);
@@ -475,7 +477,11 @@ void SpaceShip::update(float delta)
         setAngularVelocity(-turn_speed * getSystemEffectiveness(SYS_Maneuver));
     else
         setAngularVelocity(rotationDiff * turn_speed * getSystemEffectiveness(SYS_Maneuver));
-
+    
+    if (warp_request > max_warp) 
+        warp_request = max_warp;
+    if (current_warp > max_warp)
+        current_warp = max_warp;
     if ((has_jump_drive && jump_delay > 0) || (has_warp_drive && warp_request > 0))
     {
         if (WarpJammer::isWarpJammed(getPosition()))
