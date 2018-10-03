@@ -67,6 +67,7 @@ private:
      * \brief List of known scripts
      */
     PVector<Script> script_list;
+    sf::Image terrainImage; // server only (no registerMemberReplication) terrain image data
 public:
     string global_message;
     float global_message_timeout;
@@ -123,6 +124,7 @@ public:
 
     string getNextShipCallsign();
     void setTerrain(string textureName, sf::Vector2f coordinates, float scale);
+    sf::Color getTerrainPixel(sf::Vector2f coordinates);
 };
 
 string playerWarpJumpDriveToString(EPlayerWarpJumpDrive player_warp_jump_drive);

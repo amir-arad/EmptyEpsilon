@@ -466,7 +466,11 @@ void SpaceShip::update(float delta)
         }
         if ((docking_state == DS_Docked) || (docking_state == DS_Docking))
             warp_request = 0.0;
-        
+            
+        if (gameGlobalInfo->terrain.defined){
+            float terrainWarpValue = 4 * float(gameGlobalInfo->getTerrainPixel(getPosition()).a) / (sf::Uint8)(-1);
+            max_warp = std::max(2.0f, terrainWarpValue);
+        }
     }
 
     float rotationDiff = sf::angleDifference(getRotation(), target_rotation);

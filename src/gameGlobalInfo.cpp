@@ -1,5 +1,6 @@
 #include "gameGlobalInfo.h"
 #include "preferenceManager.h"
+#include "resources.h"
 #include <regex>
 
 P<GameGlobalInfo> gameGlobalInfo;
@@ -190,10 +191,31 @@ void GameGlobalInfo::destroy()
 }
 
 void GameGlobalInfo::setTerrain(string textureName, sf::Vector2f coordinates, float scale){
-    terrain.defined = true;
-    terrain.textureName = textureName;
-    terrain.coordinates = coordinates;
-    terrain.scale = scale;
+    if (game_server){
+        // only server can effectively load terrainImage data
+        P<ResourceStream> stream = getResourceStream(textureName);
+        if (!stream) stream = getResourceStream(textureName + ".png");
+        if (stream && terrainImage.loadFromStream(**stream)){
+            terrain.defined = true;
+            terrain.textureName = textureName;
+            terrain.coordinates = coordinates;
+            terrain.scale = scale;
+        } else {
+            LOG(WARNING) << "Failed to load terrain texture image: " << textureName;
+        }
+    } else {
+        LOG(ERROR) << "GameGlobalInfo::setTerrain can only be called locally on the server";
+    }
+}
+
+sf::Color GameGlobalInfo::getTerrainPixel(sf::Vector2f coordinates){ 
+    coordinates = (sf::Vector2f(terrainImage.getSize()) * 0.5f) + ((coordinates + terrain.coordinates) / terrain.scale);
+    if (coordinates.x < 0 || coordinates.x > terrainImage.getSize().x || 
+        coordinates.y < 0 || coordinates.y > terrainImage.getSize().y)
+        // outside of image boundaries
+        return sf::Color::Transparent;
+     else 
+        return terrainImage.getPixel(coordinates.x, coordinates.y);
 }
 
 string playerWarpJumpDriveToString(EPlayerWarpJumpDrive player_warp_jump_drive)
