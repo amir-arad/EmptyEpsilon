@@ -20,9 +20,6 @@
 #include "gui/gui2_togglebutton.h"
 #include "gui/gui2_textentry.h"
 
-#include "PerlinNoise.h"
-#include "SimplexNoise.hpp"
-
 NavigationScreen::NavigationScreen(GuiContainer *owner)
     : GuiOverlay(owner, "NAVIGATION_SCREEN", colorConfig.background), mode(TargetSelection)
 {
