@@ -468,7 +468,7 @@ void SpaceShip::update(float delta)
             warp_request = 0.0;
             
         if (gameGlobalInfo->terrain.defined){
-            float terrainWarpValue = 4 * float(gameGlobalInfo->getTerrainPixel(getPosition()).a) / (sf::Uint8)(-1);
+            float terrainWarpValue = 4 * float(gameGlobalInfo->getTerrainPixel(getPosition()).a) / 255;
             max_warp = std::max(2.0f, terrainWarpValue);
         }
     }
@@ -482,8 +482,6 @@ void SpaceShip::update(float delta)
     else
         setAngularVelocity(rotationDiff * turn_speed * getSystemEffectiveness(SYS_Maneuver));
     
-    if (warp_request > max_warp) 
-        warp_request = max_warp;
     if (current_warp > max_warp)
         current_warp = max_warp;
     if ((has_jump_drive && jump_delay > 0) || (has_warp_drive && warp_request > 0))
@@ -524,16 +522,19 @@ void SpaceShip::update(float delta)
             if (current_impulse < 0.0)
                 current_impulse = 0.0;
         }else{
-            if (current_warp < warp_request)
+            if (current_warp < warp_request && current_warp < max_warp)
             {
                 current_warp += delta / warp_charge_time;
                 if (current_warp > warp_request)
                     current_warp = warp_request;
-            }else if (current_warp > warp_request)
+                if (current_warp > max_warp)
+                    current_warp = max_warp;    
+            }else if (current_warp > warp_request || current_warp > max_warp)
             {
+                float destWarp = std::min(float(warp_request), max_warp);
                 current_warp -= delta / warp_decharge_time;
-                if (current_warp < warp_request)
-                    current_warp = warp_request;
+                if (current_warp < destWarp)
+                    current_warp = destWarp;
             }
         }
     }else{
