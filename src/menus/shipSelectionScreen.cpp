@@ -444,7 +444,7 @@ void ShipSelectionScreen::updateCrewTypeOptions()
         crew_position_button[scienceOfficer]->show();
         crew_position_button[relayOfficerNC]->show();
         crew_position_button[commsView]->show();
-        crew_position_button[navigator]->show();
+        crew_position_button[navigation]->show();
         break;
     case 1:
         for(int n = helmsOfficer; n <= relayOfficer; n++)
