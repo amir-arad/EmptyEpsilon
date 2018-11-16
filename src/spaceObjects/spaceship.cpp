@@ -9,6 +9,7 @@
 #include "spaceObjects/warpJammer.h"
 #include "gameGlobalInfo.h"
 #include "random.h"
+#include "shipCargo.h"
 
 #include "scriptInterface.h"
 
@@ -273,11 +274,8 @@ void SpaceShip::applyTemplateValues()
                 while (docks[idx].state != Empty){
                     idx = irandom(0, maxActiveDockIndex);
                 }
-                docks[idx].setState(EDockState::Docked);
-                docks[idx].setCallSign("DRN-" + gameGlobalInfo->getNextShipCallsign());
-                docks[idx].setTemplate(dt.template_name);
-                docks[idx].setEnergy(drone_ship_template->energy_storage_amount);
-                docks[idx].setEnergyRequest(drone_ship_template->energy_storage_amount);
+                P<ShipCargo> cargo = new ShipCargo(drone_ship_template);
+                docks[idx].dock(cargo);
             } else {
                 LOG(ERROR) << "Too many drones: " << template_name;
             }
@@ -1316,12 +1314,13 @@ bool SpaceShip::tryDockDrone(SpaceShip* other){
         auto isOpenForDocking = [](Dock& d)-> bool{
             return d.isOpenForDocking();
         };
-        Dock* p = std::find_if(docks + randIdx, docks+max_docks_count, isOpenForDocking);
-        if (p == docks + max_docks_count){
-            p = std::find_if(docks, docks+max_docks_count, isOpenForDocking);
+        Dock* dock = std::find_if(docks + randIdx, docks+max_docks_count, isOpenForDocking);
+        if (dock == docks + max_docks_count){
+            dock = std::find_if(docks, docks+max_docks_count, isOpenForDocking);
         }
-        if (p < docks + max_docks_count){
-            p->dock(other);
+        if (dock < docks + max_docks_count){
+            P<ShipCargo> cargo = new ShipCargo(other);
+            dock->dock(cargo);
             return true;
         }
     }
