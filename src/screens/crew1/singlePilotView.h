@@ -16,6 +16,7 @@ private:
     P<PlayerSpaceship>& target_spaceship;
     GuiOverlay* background_gradient;
 
+    GuiKeyValueDisplay* heat_display;
     GuiKeyValueDisplay* hull_display;
     GuiKeyValueDisplay* energy_display;
     GuiKeyValueDisplay* heading_display;
