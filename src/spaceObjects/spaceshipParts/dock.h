@@ -29,6 +29,8 @@ string getDockStateName(EDockState state);
 
 class Dock : public sf::NonCopyable
 {
+    public:
+    static Dock* findOpenForDocking(Dock docks[], int size);
   protected:
     SpaceShip *parent;
     int index_at_parent;

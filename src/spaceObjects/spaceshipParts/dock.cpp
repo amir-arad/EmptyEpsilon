@@ -2,6 +2,23 @@
 #include "spaceObjects/spaceship.h"
 #include "spaceObjects/playerSpaceship.h"
 #include <algorithm>
+#include "random.h"
+
+bool isDockOpenForDocking (Dock &d){
+    return d.isOpenForDocking();
+}
+
+Dock *Dock::findOpenForDocking(Dock docks[], int size)
+{
+    int randIdx = irandom(0, size - 1);
+    Dock *dock = std::find_if(docks + randIdx, docks + size, isDockOpenForDocking);
+    if (dock == docks + size)
+        dock = std::find_if(docks, docks + size, isDockOpenForDocking);
+    if (dock == docks + size)
+        return nullptr;
+    else
+        return dock;
+}
 
 Dock::Dock() : parent(nullptr), dock_type(Disabled), move_target_index(-1)
 {
