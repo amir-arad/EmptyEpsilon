@@ -62,12 +62,12 @@ bool ShipCargo::onLaunch(sf::Vector2f position, float rotationAngle)
 Cargo::Entries ShipCargo::getEntries()
 {
     Cargo::Entries result;
-    result.push_back(std::make_tuple("callsign", callsign));
-    result.push_back(std::make_tuple("type", template_name));
-    result.push_back(std::make_tuple("energy", int(energy_level)));
+    result.push_back(std::make_tuple("", "callsign", callsign));
+    result.push_back(std::make_tuple("", "type", template_name));
+    result.push_back(std::make_tuple("gui/icons/energy", "energy", int(energy_level)));
     P<ShipTemplate> ship_template = ShipTemplate::getTemplate(template_name);
     if (ship_template){
-        result.push_back(std::make_tuple("hull strength", string(100 * this->hull_strength / ship_template->hull, 2) + "%"));
+        result.push_back(std::make_tuple("gui/icons/hull", "Hull", string(int(100 * this->hull_strength / ship_template->hull)) + "%"));
     }
     return result;
 }

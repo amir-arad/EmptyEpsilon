@@ -94,8 +94,10 @@ SinglePilotView::SinglePilotView(GuiContainer* owner, P<PlayerSpaceship>& target
     );
 
     // Ship stats and combat maneuver at bottom right corner of left panel.
-    (new GuiCombatManeuver(this, "COMBAT_MANEUVER", target_spaceship))->setPosition(-20, -180, ABottomRight)->setSize(200, 150);
+    (new GuiCombatManeuver(this, "COMBAT_MANEUVER", target_spaceship))->setPosition(-20, -220, ABottomRight)->setSize(200, 150);
 
+    hull_display = new GuiKeyValueDisplay(this, "HULL_DISPLAY", 0.45, "Hull", "");
+    hull_display->setIcon("gui/icons/hull")->setTextSize(20)->setPosition(-20, -180, ABottomRight)->setSize(240, 40);
     energy_display = new GuiKeyValueDisplay(this, "ENERGY_DISPLAY", 0.45, "Energy", "");
     energy_display->setIcon("gui/icons/energy")->setTextSize(20)->setPosition(-20, -140, ABottomRight)->setSize(240, 40);
     heading_display = new GuiKeyValueDisplay(this, "HEADING_DISPLAY", 0.45, "Heading", "");
@@ -143,6 +145,7 @@ void SinglePilotView::onDraw(sf::RenderTarget& window)
 {
     if (target_spaceship)
     {
+        hull_display->setValue(string(int(100 * target_spaceship->hull_strength / target_spaceship->hull_max)) + "%");
         energy_display->setValue(string(int(target_spaceship->energy_level)));
         heading_display->setValue(string(fmodf(target_spaceship->getRotation() + 360.0 + 360.0 - 270.0, 360.0), 1));
         float velocity = sf::length(target_spaceship->getVelocity()) / 1000 * 60;

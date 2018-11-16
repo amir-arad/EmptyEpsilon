@@ -9,7 +9,7 @@ class ModelData;
 class Cargo : public MultiplayerObject
 {
 public:
-  typedef std::vector<std::tuple<string, string>> Entries;
+  typedef std::vector<std::tuple<string, string, string>> Entries;
 
 public:
   Cargo(string multiplayerClassIdentifier) : MultiplayerObject(multiplayerClassIdentifier) {}
