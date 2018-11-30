@@ -19,6 +19,32 @@ GameMasterActions::GameMasterActions()
     gameMasterActions = this;
 }
 
+static inline sf::Packet& operator << (sf::Packet& packet, const P<SpaceObject>& object) { return packet << object->getMultiplayerId(); }
+static inline sf::Packet& operator >> (sf::Packet& packet, P<SpaceObject>& object) { 
+    int selectedItemId;
+    packet >> selectedItemId;
+    object = game_server->getObjectById(selectedItemId);
+    return packet;
+}
+static inline sf::Packet& operator << (sf::Packet& packet, /*const*/ PVector<SpaceObject>& objects) { 
+    packet << objects.size();
+    foreach(SpaceObject, object, objects)
+    {
+        packet << object;
+    }
+    return packet;
+}
+static inline sf::Packet& operator >> (sf::Packet& packet, PVector<SpaceObject>& objects) { 
+    int selectedItemsLeft;
+    packet >> selectedItemsLeft;
+    while (selectedItemsLeft--) {
+        P<SpaceObject> object;
+        packet >> object;
+        if (object) objects.push_back(object);
+    }
+    return packet;
+}
+
 void GameMasterActions::onReceiveClientCommand(int32_t client_id, sf::Packet& packet)
 {
     int16_t command;
@@ -59,20 +85,8 @@ void GameMasterActions::onReceiveClientCommand(int32_t client_id, sf::Packet& pa
         {
             int index;
             packet >> index;
-            int selectedItemsLeft;
-            packet >> selectedItemsLeft;
             PVector<SpaceObject> selection;
-            while (selectedItemsLeft--) {
-                int selectedItemId;
-                packet >> selectedItemId;
-                P<SpaceObject> object;
-                if (game_server)
-                    object = game_server->getObjectById(selectedItemId);
-                else 
-                    object = game_client->getObjectById(selectedItemId);
-                if (object)
-                    selection.push_back(object);
-            }
+            packet >> selection;
             // set selection for the possible duration of the script
             gmSelectionForRunningScript = &selection;
             int n = 0;
@@ -93,20 +107,8 @@ void GameMasterActions::onReceiveClientCommand(int32_t client_id, sf::Packet& pa
         {
             sf::Vector2f delta;
             packet >> delta;
-            int selectedItemsLeft;
-            packet >> selectedItemsLeft;
             PVector<SpaceObject> selection;
-            while (selectedItemsLeft--) {
-                int selectedItemId;
-                packet >> selectedItemId;
-                P<SpaceObject> object;
-                if (game_server)
-                    object = game_server->getObjectById(selectedItemId);
-                else 
-                    object = game_client->getObjectById(selectedItemId);
-                if (object)
-                    selection.push_back(object);
-            }
+            packet >> selection;
             for(P<SpaceObject> obj : selection)
             {
                 obj->setPosition(obj->getPosition() + delta);
@@ -137,20 +139,12 @@ void GameMasterActions::commandInterceptAllCommsToGm(bool value)
 void GameMasterActions::commandCallGmScript(int index, PVector<SpaceObject> selection)
 {
     sf::Packet packet;
-    packet << CMD_CALL_GM_SCRIPT << index << selection.size();
-    foreach(SpaceObject, s, selection)
-    {
-        packet << s->getMultiplayerId();
-    }
+    packet << CMD_CALL_GM_SCRIPT << index << selection;
     sendClientCommand(packet);
 }
 void GameMasterActions::commandMoveObjects(sf::Vector2f delta, PVector<SpaceObject> selection)
 {
     sf::Packet packet;
-    packet << CMD_MOVE_OBJECTS << delta << selection.size();
-    foreach(SpaceObject, s, selection)
-    {
-        packet << s->getMultiplayerId();
-    }
+    packet << CMD_MOVE_OBJECTS << delta << selection;
     sendClientCommand(packet);
 }
