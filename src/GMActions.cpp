@@ -90,11 +90,11 @@ void GameMasterActions::onReceiveClientCommand(int32_t client_id, sf::Packet& pa
             // set selection for the possible duration of the script
             gmSelectionForRunningScript = &selection;
             int n = 0;
-            for(GMScriptCallback& callback : gameGlobalInfo->gm_callback_functions)
+            for(ScriptSimpleCallback& callback : gameGlobalInfo->gm_callback_functions)
             {
                 if (n == index)
                 {
-                    callback.callback.call();
+                    callback.call();
                     break;
                 }
                 n++;
@@ -148,3 +148,67 @@ void GameMasterActions::commandMoveObjects(sf::Vector2f delta, PVector<SpaceObje
     packet << CMD_MOVE_OBJECTS << delta << selection;
     sendClientCommand(packet);
 }
+
+
+static int addGMFunction(lua_State* L)
+{
+    const char* name = luaL_checkstring(L, 1);
+
+    ScriptSimpleCallback callback;
+    
+    int idx = 2;
+    convert<ScriptSimpleCallback>::param(L, idx, callback);
+
+    gameGlobalInfo->gm_callback_names.emplace_back(name);
+    gameGlobalInfo->gm_callback_functions.emplace_back(callback);
+
+    return 0;
+}
+/// addGMFunction(name, function)
+/// Add a function that can be called from the GM console. This can be used to create helper scripts for the GM.
+/// Or to give the GM console certain control over the scenario.
+REGISTER_SCRIPT_FUNCTION(addGMFunction);
+
+static int removeGMFunction(lua_State* L)
+{
+    string name = luaL_checkstring(L, 1);
+    std::vector<uint32_t> indexesToDelete;
+    for (uint32_t i = 0; i < gameGlobalInfo->gm_callback_names.size(); ++i)
+    {
+        if (gameGlobalInfo->gm_callback_names[i] == name)
+        {
+            indexesToDelete.emplace_back(i);
+        }
+    }
+    for (auto i = indexesToDelete.rbegin(); i != indexesToDelete.rend(); i++){
+        gameGlobalInfo->gm_callback_names.erase(gameGlobalInfo->gm_callback_names.begin() + *i);
+        gameGlobalInfo->gm_callback_functions.erase(gameGlobalInfo->gm_callback_functions.begin() + *i);
+    }
+    return 0;
+}
+/// removeGMFunction(name)
+/// Remove a function from the GM console
+REGISTER_SCRIPT_FUNCTION(removeGMFunction);
+
+static int clearGMFunctions(lua_State* L)
+{
+    gameGlobalInfo->gm_callback_names.clear();
+    gameGlobalInfo->gm_callback_functions.clear();
+    return 0;
+}
+/// clearGMFunctions()
+/// Remove all the GM functions from the GM console.
+REGISTER_SCRIPT_FUNCTION(clearGMFunctions);
+
+static int getGMSelection(lua_State* L)
+{
+    PVector<SpaceObject> objects;
+    if (gameMasterActions->gmSelectionForRunningScript){
+        objects = *gameMasterActions->gmSelectionForRunningScript;
+    } 
+    return convert<PVector<SpaceObject> >::returnType(L, objects);
+}
+/// getGMSelection()
+/// Returns an list of objects that the GM currently has selected.
+REGISTER_SCRIPT_FUNCTION(getGMSelection);
+
