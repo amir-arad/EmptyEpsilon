@@ -95,7 +95,7 @@ void GameMasterActions::onReceiveClientCommand(int32_t client_id, sf::Packet& pa
                 if (n == index)
                 {
                     callback.callback.call();
-                    return;
+                    break;
                 }
                 n++;
             }
