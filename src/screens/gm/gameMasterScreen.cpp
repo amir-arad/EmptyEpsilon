@@ -351,10 +351,7 @@ void GameMasterScreen::onMouseDrag(sf::Vector2f position)
         position -= (position - drag_previous_position);
         break;
     case CD_DragObjects:
-        for(P<SpaceObject> obj : targets.getTargets())
-        {
-            obj->setPosition(obj->getPosition() + (position - drag_previous_position));
-        }
+        gameMasterActions->commandMoveObjects(position - drag_previous_position, targets.getTargets());
         break;
     case CD_BoxSelect:
         box_selection_overlay->show();

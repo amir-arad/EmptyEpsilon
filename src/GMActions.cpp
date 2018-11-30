@@ -7,6 +7,7 @@ const static int16_t CMD_RUN_SCRIPT = 0x0000;
 const static int16_t CMD_SEND_GLOBAL_MESSAGE = 0x0001;
 const static int16_t CMD_INTERCEPT_ALL_COMMS_TO_GM = 0x0002;
 const static int16_t CMD_CALL_GM_SCRIPT = 0x0003;
+const static int16_t CMD_MOVE_OBJECTS = 0x0004;
 
 P<GameMasterActions> gameMasterActions;
 
@@ -88,6 +89,30 @@ void GameMasterActions::onReceiveClientCommand(int32_t client_id, sf::Packet& pa
             gmSelectionForRunningScript = nullptr;
         }
         break;
+        case CMD_MOVE_OBJECTS:
+        {
+            sf::Vector2f delta;
+            packet >> delta;
+            int selectedItemsLeft;
+            packet >> selectedItemsLeft;
+            PVector<SpaceObject> selection;
+            while (selectedItemsLeft--) {
+                int selectedItemId;
+                packet >> selectedItemId;
+                P<SpaceObject> object;
+                if (game_server)
+                    object = game_server->getObjectById(selectedItemId);
+                else 
+                    object = game_client->getObjectById(selectedItemId);
+                if (object)
+                    selection.push_back(object);
+            }
+            for(P<SpaceObject> obj : selection)
+            {
+                obj->setPosition(obj->getPosition() + delta);
+            }
+        }
+        break;
     }
 }
 
@@ -113,6 +138,16 @@ void GameMasterActions::commandCallGmScript(int index, PVector<SpaceObject> sele
 {
     sf::Packet packet;
     packet << CMD_CALL_GM_SCRIPT << index << selection.size();
+    foreach(SpaceObject, s, selection)
+    {
+        packet << s->getMultiplayerId();
+    }
+    sendClientCommand(packet);
+}
+void GameMasterActions::commandMoveObjects(sf::Vector2f delta, PVector<SpaceObject> selection)
+{
+    sf::Packet packet;
+    packet << CMD_MOVE_OBJECTS << delta << selection.size();
     foreach(SpaceObject, s, selection)
     {
         packet << s->getMultiplayerId();
