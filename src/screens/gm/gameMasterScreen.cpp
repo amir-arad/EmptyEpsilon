@@ -109,7 +109,8 @@ GameMasterScreen::GameMasterScreen()
             }
         }
     });
-    tweak_button->setPosition(20, -120, ABottomLeft)->setSize(250, 50)->hide();
+    // tweaks only work on the server
+    tweak_button->setPosition(20, -120, ABottomLeft)->setSize(250, 50)->setEnable(bool(game_server))->hide();
 
     player_comms_hail = new GuiButton(this, "HAIL_PLAYER", "Hail ship", [this]() {
         for(P<SpaceObject> obj : targets.getTargets())
@@ -298,6 +299,7 @@ void GameMasterScreen::update(float delta)
         }
     }
     pause_button->setValue(engine->getGameSpeed() == 0.0f);
+    intercept_comms_button->setValue(gameGlobalInfo->intercept_all_comms_to_gm);
 }
 
 void GameMasterScreen::onMouseDown(sf::Vector2f position)
