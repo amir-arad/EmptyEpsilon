@@ -2,6 +2,8 @@
 
 #include "engine.h"
 #include "gameGlobalInfo.h"
+#include "spaceObjects/wormHole.h"
+#include "spaceObjects/cpuShip.h"
 
 const static int16_t CMD_RUN_SCRIPT = 0x0000;
 const static int16_t CMD_SEND_GLOBAL_MESSAGE = 0x0001;
@@ -10,6 +12,7 @@ const static int16_t CMD_CALL_GM_SCRIPT = 0x0003;
 const static int16_t CMD_MOVE_OBJECTS = 0x0004;
 const static int16_t CMD_SET_GAME_SPEED = 0x0005;
 const static int16_t CMD_SET_FACTION_ID = 0x0006;
+const static int16_t CMD_CONTEXTUAL_GO_TO = 0x0007;
 
 P<GameMasterActions> gameMasterActions;
 
@@ -86,9 +89,8 @@ void GameMasterActions::onReceiveClientCommand(int32_t client_id, sf::Packet& pa
     case CMD_CALL_GM_SCRIPT:
         {
             int index;
-            packet >> index;
             PVector<SpaceObject> selection;
-            packet >> selection;
+            packet >> index >> selection;
             // set selection for the possible duration of the script
             gmSelectionForRunningScript = &selection;
             int n = 0;
@@ -108,9 +110,8 @@ void GameMasterActions::onReceiveClientCommand(int32_t client_id, sf::Packet& pa
         case CMD_MOVE_OBJECTS:
         {
             sf::Vector2f delta;
-            packet >> delta;
             PVector<SpaceObject> selection;
-            packet >> selection;
+            packet >> delta >> selection;
             for(P<SpaceObject> obj : selection)
             {
                 obj->setPosition(obj->getPosition() + delta);
@@ -127,13 +128,21 @@ void GameMasterActions::onReceiveClientCommand(int32_t client_id, sf::Packet& pa
         case CMD_SET_FACTION_ID:
         {
             uint32_t faction_id;
-            packet >> faction_id;
             PVector<SpaceObject> selection;
-            packet >> selection;
+            packet >> faction_id >> selection;
             for(P<SpaceObject> obj : selection)
             {
                 obj->setFactionId(faction_id);
             }
+        }
+        break;
+        case CMD_CONTEXTUAL_GO_TO:
+        {
+            sf::Vector2f position;
+            bool force;
+            PVector<SpaceObject> selection;
+            packet >> position >> force >> selection;
+            executeContextualGoTo(position, force, selection);
         }
         break;
     }
@@ -180,6 +189,75 @@ void GameMasterActions::commandSetFactionId(uint32_t faction_id, PVector<SpaceOb
     sf::Packet packet;
     packet << CMD_SET_FACTION_ID << faction_id << selection;
     sendClientCommand(packet);
+}
+void GameMasterActions::commandContextualGoTo(sf::Vector2f position, bool force, PVector<SpaceObject> selection)
+{
+    sf::Packet packet;
+    packet << CMD_CONTEXTUAL_GO_TO << position << force << selection;
+    sendClientCommand(packet);
+}
+void GameMasterActions::executeContextualGoTo(sf::Vector2f position, bool force, PVector<SpaceObject> selection)
+{
+    P<SpaceObject> target;
+    PVector<Collisionable> list = CollisionManager::queryArea(position, position);
+    foreach (Collisionable, collisionable, list)
+    {
+        P<SpaceObject> space_object = collisionable;
+        if (space_object)
+        {
+            if (!target || sf::length(position - space_object->getPosition()) < sf::length(position - target->getPosition()))
+                target = space_object;
+        }
+    }
+
+    sf::Vector2f upper_bound(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
+    sf::Vector2f lower_bound(std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    for (P<SpaceObject> obj : selection)
+    {
+        P<CpuShip> cpu_ship = obj;
+        if (!cpu_ship)
+            continue;
+
+        lower_bound.x = std::min(lower_bound.x, obj->getPosition().x);
+        lower_bound.y = std::min(lower_bound.y, obj->getPosition().y);
+        upper_bound.x = std::max(upper_bound.x, obj->getPosition().x);
+        upper_bound.y = std::max(upper_bound.y, obj->getPosition().y);
+    }
+    sf::Vector2f objects_center = (upper_bound + lower_bound) / 2.0f;
+
+    for (P<SpaceObject> obj : selection)
+    {
+        P<CpuShip> cpu_ship = obj;
+        P<WormHole> wormhole = obj;
+        if (cpu_ship)
+        {
+            if (target && target != obj && target->canBeTargetedBy(obj))
+            {
+                if (obj->isEnemy(target))
+                {
+                    cpu_ship->orderAttack(target);
+                }
+                else
+                {
+                    if (!force && target->canBeDockedBy(cpu_ship))
+                        cpu_ship->orderDock(target);
+                    else
+                        cpu_ship->orderDefendTarget(target);
+                }
+            }
+            else
+            {
+                if (force)
+                    cpu_ship->orderFlyTowardsBlind(position + (obj->getPosition() - objects_center));
+                else
+                    cpu_ship->orderFlyTowards(position + (obj->getPosition() - objects_center));
+            }
+        }
+        else if (wormhole)
+        {
+            wormhole->setTargetPosition(position);
+        }
+    }
 }
 
 static int addGMFunction(lua_State* L)

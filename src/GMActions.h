@@ -23,7 +23,12 @@ public:
     void commandMoveObjects(sf::Vector2f delta, PVector<SpaceObject> selection);
     void commandSetGameSpeed(float speed);
     void commandSetFactionId(uint32_t faction_id, PVector<SpaceObject> selection);
+    void commandContextualGoTo(sf::Vector2f position, bool force, PVector<SpaceObject> selection);
     virtual void onReceiveClientCommand(int32_t client_id, sf::Packet& packet);
+    
+private:
+    void executeContextualGoTo(sf::Vector2f position, bool force, PVector<SpaceObject> selection);
+
 };
 
 #endif//GM_ACTIONS
