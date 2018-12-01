@@ -13,6 +13,7 @@ enum EShipOrder
 };
 class GameMasterActions;
 class SpaceObject;
+class PlayerSpaceship;
 extern P<GameMasterActions> gameMasterActions;
 
 class GameMasterActions : public MultiplayerObject
@@ -33,6 +34,7 @@ public:
     void commandContextualGoTo(sf::Vector2f position, bool force, PVector<SpaceObject> selection);
     void commandOrderShip(EShipOrder order, PVector<SpaceObject> selection);
     void commandDestroy(PVector<SpaceObject> selection);
+    void commandSendCommToPlayerShip(P<PlayerSpaceship> target, string line);
     virtual void onReceiveClientCommand(int32_t client_id, sf::Packet& packet);
     
 private:
