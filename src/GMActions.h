@@ -32,6 +32,7 @@ public:
     void commandSetFactionId(uint32_t faction_id, PVector<SpaceObject> selection);
     void commandContextualGoTo(sf::Vector2f position, bool force, PVector<SpaceObject> selection);
     void commandOrderShip(EShipOrder order, PVector<SpaceObject> selection);
+    void commandDestroy(PVector<SpaceObject> selection);
     virtual void onReceiveClientCommand(int32_t client_id, sf::Packet& packet);
     
 private:

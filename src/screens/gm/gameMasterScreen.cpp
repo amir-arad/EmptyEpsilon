@@ -297,6 +297,7 @@ void GameMasterScreen::update(float delta)
             gm_script_options->addEntry(callbackName, callbackName);
         }
     }
+    pause_button->setValue(engine->getGameSpeed() == 0.0f);
 }
 
 void GameMasterScreen::onMouseDown(sf::Vector2f position)
@@ -389,16 +390,11 @@ void GameMasterScreen::onKey(sf::Event::KeyEvent key, int unicode)
     switch(key.code)
     {
     case sf::Keyboard::Delete:
-        for(P<SpaceObject> obj : targets.getTargets())
-        {
-            if (obj)
-                obj->destroy();
-        }
+        gameMasterActions->commandDestroy(targets.getTargets());
         break;
     case sf::Keyboard::F5:
         Clipboard::setClipboard(getScriptExport(false));
         break;
-
     //TODO: This is more generic code and is duplicated.
     case sf::Keyboard::Escape:
     case sf::Keyboard::Home:
@@ -406,8 +402,10 @@ void GameMasterScreen::onKey(sf::Event::KeyEvent key, int unicode)
         returnToShipSelection();
         break;
     case sf::Keyboard::P:
-        if (game_server)
-            engine->setGameSpeed(0.0);
+        if (engine->getGameSpeed() == 0.0f)
+            gameMasterActions->commandSetGameSpeed(1.0f);
+        else
+            gameMasterActions->commandSetGameSpeed(0.0f);
         break;
     default:
         break;

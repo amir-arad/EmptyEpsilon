@@ -14,6 +14,7 @@ const static int16_t CMD_SET_GAME_SPEED = 0x0005;
 const static int16_t CMD_SET_FACTION_ID = 0x0006;
 const static int16_t CMD_CONTEXTUAL_GO_TO = 0x0007;
 const static int16_t CMD_ORDER_SHIP = 0x0008;
+const static int16_t CMD_DESTROY = 0x0009;
 
 P<GameMasterActions> gameMasterActions;
 
@@ -170,6 +171,17 @@ void GameMasterActions::onReceiveClientCommand(int32_t client_id, sf::Packet& pa
                     }
         }
         break;
+        case CMD_DESTROY:
+        {
+            PVector<SpaceObject> selection;
+            packet >> selection;
+            for(P<SpaceObject> obj : selection)
+            {
+                if (obj)
+                    obj->destroy();
+            }        
+        }
+        break;
     }
 }
 
@@ -225,6 +237,12 @@ void GameMasterActions::commandOrderShip(EShipOrder order, PVector<SpaceObject> 
 {
     sf::Packet packet;
     packet << CMD_ORDER_SHIP << int(order) << selection;
+    sendClientCommand(packet);
+}
+void GameMasterActions::commandDestroy(PVector<SpaceObject> selection)
+{
+    sf::Packet packet;
+    packet << CMD_DESTROY << selection;
     sendClientCommand(packet);
 }
 void GameMasterActions::executeContextualGoTo(sf::Vector2f position, bool force, PVector<SpaceObject> selection)
