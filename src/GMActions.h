@@ -21,6 +21,7 @@ public:
     void commandInterceptAllCommsToGm(bool value);
     void commandCallGmScript(int index, PVector<SpaceObject> selection);
     void commandMoveObjects(sf::Vector2f delta, PVector<SpaceObject> selection);
+    void commandSetGameSpeed(float speed);
     virtual void onReceiveClientCommand(int32_t client_id, sf::Packet& packet);
 };
 

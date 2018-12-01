@@ -37,9 +37,9 @@ GameMasterScreen::GameMasterScreen()
     
     pause_button = new GuiToggleButton(this, "PAUSE_BUTTON", "Pause", [this](bool value) {
         if (!value)
-            engine->setGameSpeed(1.0f);
+            gameMasterActions->commandSetGameSpeed(1.0f);
         else
-            engine->setGameSpeed(0.0f);
+            gameMasterActions->commandSetGameSpeed(0.0f);
     });
     pause_button->setValue(engine->getGameSpeed() == 0.0f)->setPosition(20, 20, ATopLeft)->setSize(250, 50);
 

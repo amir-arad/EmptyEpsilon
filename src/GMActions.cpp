@@ -8,6 +8,7 @@ const static int16_t CMD_SEND_GLOBAL_MESSAGE = 0x0001;
 const static int16_t CMD_INTERCEPT_ALL_COMMS_TO_GM = 0x0002;
 const static int16_t CMD_CALL_GM_SCRIPT = 0x0003;
 const static int16_t CMD_MOVE_OBJECTS = 0x0004;
+const static int16_t CMD_SET_GAME_SPEED = 0x0005;
 
 P<GameMasterActions> gameMasterActions;
 
@@ -115,6 +116,13 @@ void GameMasterActions::onReceiveClientCommand(int32_t client_id, sf::Packet& pa
             }
         }
         break;
+        case CMD_SET_GAME_SPEED:
+        {
+            float speed;
+            packet >> speed;
+            engine->setGameSpeed(speed);
+        }
+        break;
     }
 }
 
@@ -146,6 +154,12 @@ void GameMasterActions::commandMoveObjects(sf::Vector2f delta, PVector<SpaceObje
 {
     sf::Packet packet;
     packet << CMD_MOVE_OBJECTS << delta << selection;
+    sendClientCommand(packet);
+}
+void GameMasterActions::commandSetGameSpeed(float speed)
+{
+    sf::Packet packet;
+    packet << CMD_SET_GAME_SPEED << speed;
     sendClientCommand(packet);
 }
 
