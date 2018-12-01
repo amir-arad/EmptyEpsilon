@@ -9,6 +9,7 @@ const static int16_t CMD_INTERCEPT_ALL_COMMS_TO_GM = 0x0002;
 const static int16_t CMD_CALL_GM_SCRIPT = 0x0003;
 const static int16_t CMD_MOVE_OBJECTS = 0x0004;
 const static int16_t CMD_SET_GAME_SPEED = 0x0005;
+const static int16_t CMD_SET_FACTION_ID = 0x0006;
 
 P<GameMasterActions> gameMasterActions;
 
@@ -123,6 +124,18 @@ void GameMasterActions::onReceiveClientCommand(int32_t client_id, sf::Packet& pa
             engine->setGameSpeed(speed);
         }
         break;
+        case CMD_SET_FACTION_ID:
+        {
+            uint32_t faction_id;
+            packet >> faction_id;
+            PVector<SpaceObject> selection;
+            packet >> selection;
+            for(P<SpaceObject> obj : selection)
+            {
+                obj->setFactionId(faction_id);
+            }
+        }
+        break;
     }
 }
 
@@ -144,7 +157,7 @@ void GameMasterActions::commandInterceptAllCommsToGm(bool value)
     packet << CMD_INTERCEPT_ALL_COMMS_TO_GM << value;
     sendClientCommand(packet);
 }
-void GameMasterActions::commandCallGmScript(int index, PVector<SpaceObject> selection)
+void GameMasterActions::commandCallGmScript(uint32_t index, PVector<SpaceObject> selection)
 {
     sf::Packet packet;
     packet << CMD_CALL_GM_SCRIPT << index << selection;
@@ -162,7 +175,12 @@ void GameMasterActions::commandSetGameSpeed(float speed)
     packet << CMD_SET_GAME_SPEED << speed;
     sendClientCommand(packet);
 }
-
+void GameMasterActions::commandSetFactionId(uint32_t faction_id, PVector<SpaceObject> selection)
+{
+    sf::Packet packet;
+    packet << CMD_SET_FACTION_ID << faction_id << selection;
+    sendClientCommand(packet);
+}
 
 static int addGMFunction(lua_State* L)
 {

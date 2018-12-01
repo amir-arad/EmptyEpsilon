@@ -49,10 +49,7 @@ GameMasterScreen::GameMasterScreen()
     intercept_comms_button->setValue(gameGlobalInfo->intercept_all_comms_to_gm)->setTextSize(20)->setPosition(300, 20, ATopLeft)->setSize(200, 25);
     
     faction_selector = new GuiSelector(this, "FACTION_SELECTOR", [this](int index, string value) {
-        for(P<SpaceObject> obj : targets.getTargets())
-        {
-            obj->setFactionId(index);
-        }
+        gameMasterActions->commandSetFactionId(index, targets.getTargets());
     });
     for(P<FactionInfo> info : factionInfo)
         faction_selector->addEntry(info->getName(), info->getName());
