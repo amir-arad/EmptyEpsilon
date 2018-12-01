@@ -13,6 +13,7 @@ const static int16_t CMD_MOVE_OBJECTS = 0x0004;
 const static int16_t CMD_SET_GAME_SPEED = 0x0005;
 const static int16_t CMD_SET_FACTION_ID = 0x0006;
 const static int16_t CMD_CONTEXTUAL_GO_TO = 0x0007;
+const static int16_t CMD_ORDER_SHIP = 0x0008;
 
 P<GameMasterActions> gameMasterActions;
 
@@ -145,6 +146,30 @@ void GameMasterActions::onReceiveClientCommand(int32_t client_id, sf::Packet& pa
             executeContextualGoTo(position, force, selection);
         }
         break;
+        case CMD_ORDER_SHIP:
+        {
+            int i_order;
+            PVector<SpaceObject> selection;
+            packet >> i_order >> selection;
+            for(P<SpaceObject> obj : selection)
+                if (P<CpuShip>(obj))
+                    switch(EShipOrder(i_order))
+                    {
+                        case SO_Idle:
+                            P<CpuShip>(obj)->orderIdle();
+                        break;
+                        case SO_Roaming:
+                            P<CpuShip>(obj)->orderRoaming();
+                        break;
+                        case SO_StandGround:
+                            P<CpuShip>(obj)->orderStandGround();
+                        break;
+                        case SO_DefendLocation:
+                            P<CpuShip>(obj)->orderDefendLocation(obj->getPosition());
+                        break;
+                    }
+        }
+        break;
     }
 }
 
@@ -194,6 +219,12 @@ void GameMasterActions::commandContextualGoTo(sf::Vector2f position, bool force,
 {
     sf::Packet packet;
     packet << CMD_CONTEXTUAL_GO_TO << position << force << selection;
+    sendClientCommand(packet);
+}
+void GameMasterActions::commandOrderShip(EShipOrder order, PVector<SpaceObject> selection)
+{
+    sf::Packet packet;
+    packet << CMD_ORDER_SHIP << int(order) << selection;
     sendClientCommand(packet);
 }
 void GameMasterActions::executeContextualGoTo(sf::Vector2f position, bool force, PVector<SpaceObject> selection)

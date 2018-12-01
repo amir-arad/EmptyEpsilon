@@ -138,24 +138,16 @@ GameMasterScreen::GameMasterScreen()
 
     (new GuiLabel(order_layout, "ORDERS_LABEL", "Orders:", 20))->addBackground()->setSize(GuiElement::GuiSizeMax, 30);
     (new GuiButton(order_layout, "ORDER_IDLE", "Idle", [this]() {
-        for(P<SpaceObject> obj : targets.getTargets())
-            if (P<CpuShip>(obj))
-                P<CpuShip>(obj)->orderIdle();
+        gameMasterActions->commandOrderShip(SO_Idle, getSelection());
     }))->setTextSize(20)->setSize(GuiElement::GuiSizeMax, 30);
     (new GuiButton(order_layout, "ORDER_ROAMING", "Roaming", [this]() {
-        for(P<SpaceObject> obj : targets.getTargets())
-            if (P<CpuShip>(obj))
-                P<CpuShip>(obj)->orderRoaming();
+        gameMasterActions->commandOrderShip(SO_Roaming, getSelection());
     }))->setTextSize(20)->setSize(GuiElement::GuiSizeMax, 30);
     (new GuiButton(order_layout, "ORDER_STAND_GROUND", "Stand ground", [this]() {
-        for(P<SpaceObject> obj : targets.getTargets())
-            if (P<CpuShip>(obj))
-                P<CpuShip>(obj)->orderStandGround();
+        gameMasterActions->commandOrderShip(SO_StandGround, getSelection());
     }))->setTextSize(20)->setSize(GuiElement::GuiSizeMax, 30);
     (new GuiButton(order_layout, "ORDER_DEFEND_LOCATION", "Defend location", [this]() {
-        for(P<SpaceObject> obj : targets.getTargets())
-            if (P<CpuShip>(obj))
-                P<CpuShip>(obj)->orderDefendLocation(obj->getPosition());
+        gameMasterActions->commandOrderShip(SO_DefendLocation, getSelection());
     }))->setTextSize(20)->setSize(GuiElement::GuiSizeMax, 30);
 
     chat_layer = new GuiElement(this, "");
