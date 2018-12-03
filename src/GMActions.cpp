@@ -15,7 +15,7 @@ const static int16_t CMD_SET_FACTION_ID = 0x0006;
 const static int16_t CMD_CONTEXTUAL_GO_TO = 0x0007;
 const static int16_t CMD_ORDER_SHIP = 0x0008;
 const static int16_t CMD_DESTROY = 0x0009;
-const static int16_t CMD_SEND_COMM_TO_PLAYER_SHIP = 0x0010;
+const static int16_t CMD_SEND_COMM_TO_PLAYER_SHIP = 0x000A;
 
 P<GameMasterActions> gameMasterActions;
 
@@ -35,7 +35,7 @@ static inline sf::Packet& operator >> (sf::Packet& packet, P<SpaceObject>& objec
     return packet;
 }
 static inline sf::Packet& operator << (sf::Packet& packet, /*const*/ PVector<SpaceObject>& objects) { 
-    packet << objects.size();
+    packet << int(objects.size());
     foreach(SpaceObject, object, objects)
     {
         packet << object;
