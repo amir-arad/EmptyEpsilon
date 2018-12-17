@@ -461,7 +461,7 @@
                     var stateTextZoom = "100px = " + (0.1 / this._zoom_scale).toPrecision(3) + "U";
                     var stateTextX = "X: " + this._view_x.toPrecision(6);
                     var stateTextY = "Y: " + this._view_y.toPrecision(6);
-					var stateTextSector = "(" + this.getSectorDesignation(this._view_y, this._view_x, 20000) + ")";
+					var stateTextSector = "(" + this.getSectorDesignation(this._view_x, this._view_y, 20000) + ")";
                     
                     // TODO: Fix out-of-range sector designations in-game.
                     var stateText = stateTextTime + " / " + stateTextZoom + " / " + stateTextX + " / " + stateTextY + " " + stateTextSector;
