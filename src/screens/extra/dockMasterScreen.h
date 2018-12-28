@@ -4,6 +4,7 @@
 #include "gui/gui2_overlay.h"
 #include "spaceObjects/shipTemplateBasedObject.h"
 
+class GuiToggleButton;
 class GuiPanel;
 class GuiSlider;
 class GuiButton;
@@ -24,10 +25,12 @@ class DockMasterScreen : public GuiOverlay
     GuiListbox* docks;
     int index = 0;
     GuiLabel *title;
-    GuiAutoLayout *sideBar;
+    GuiAutoLayout *cargoView;
     GuiAutoLayout* cargoInfo;
     std::vector<GuiKeyValueDisplay*> cargoInfoItems;
     GuiRotatingModelView* model;
+
+    GuiToggleButton* tractor_beam_switch;
 
     GuiProgressbar *energy_bar;
     GuiSlider *energy_slider;

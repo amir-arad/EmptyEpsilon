@@ -15,9 +15,10 @@
 #include "gui/gui2_progressbar.h"
 #include "gui/gui2_button.h"
 #include "gui/gui2_selector.h"
+#include "gui/gui2_togglebutton.h"
 #include "screenComponents/powerDamageIndicator.h"
-
 #include "screenComponents/rotatingModelView.h"
+#include "screenComponents/radarView.h"
 
 const int ROW_SIZE = 4;
 const int ROW_HEIGHT = 200;
@@ -51,41 +52,49 @@ DockMasterScreen::DockMasterScreen(GuiContainer *owner)
         }
     }
 
-    GuiElement *rightSide = new GuiElement(rootLayout, "RIGHT_SIDE");
+    GuiAutoLayout *rightSide = new GuiAutoLayout(rootLayout, "RIGHT_SIDE", GuiAutoLayout::LayoutVerticalTopToBottom);
     rightSide->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
-
+    
     title = new GuiLabel(rightSide, "TITLE", "dock x", 30);
     title->addBackground()
         ->setAlignment(ACenter)
-        ->setPosition(0, 0, ATopCenter)
         ->setSize(GuiElement::GuiSizeMax, 50);
 
-    GuiAutoLayout *dockPanel = new GuiAutoLayout(rightSide, "DOCK_PANEL", GuiAutoLayout::LayoutVerticalColumns);
-    dockPanel->setSize(GuiElement::GuiSizeMax, 50)->setPosition(0, 50, ATopCenter);
+    GuiElement *dockDetails = new GuiElement(rightSide, "DOCK_DETAILS");
+    dockDetails->setSize(GuiElement::GuiSizeMax, 500);
 
-    sideBar = new GuiAutoLayout(rightSide, "SIDE_BAR", GuiAutoLayout::LayoutVerticalTopToBottom);
-    sideBar->setSize(COLUMN_WIDTH, GuiElement::GuiSizeMax)->setPosition(0, 100, ATopRight);
+    GuiAutoLayout *transferBar = new GuiAutoLayout(dockDetails, "TRANSFER_BAR", GuiAutoLayout::LayoutVerticalColumns);
+    transferBar->setSize(GuiElement::GuiSizeMax, 50)->setPosition(0, 0, ATopCenter);
 
-    GuiElement *move_dest = new GuiAutoLayout(dockPanel, "", GuiAutoLayout::LayoutVerticalColumns);
+    GuiElement *move_dest = new GuiAutoLayout(transferBar, "", GuiAutoLayout::LayoutVerticalColumns);
     (new GuiLabel(move_dest, "MOVE_DEST_LABEL", "Destination:", 30))->setAlignment(ACenterRight);
     move_dest_selector = new GuiSelector(move_dest, "MOVE_DEST_SELECTOR", [this](int _idx, string value) {
         if (my_spaceship)
             my_spaceship->commandSetDockMoveTarget(index, value.toInt());
     });
 
-    GuiButton *moveButton = new GuiButton(dockPanel, "MOVE_BUTTON", "Deliver", [this]() {
+    GuiButton *moveButton = new GuiButton(transferBar, "MOVE_BUTTON", "Deliver", [this]() {
         if (my_spaceship)
             my_spaceship->commandMoveCargo(index);
     });
     moveButton->setSize(COLUMN_WIDTH, 40);
 
-    launch_button = new GuiButton(sideBar, "LAUNCH_DRONE_BUTTON", "Launch", [this]() {
+    cargoView = new GuiAutoLayout(dockDetails, "CARGO_VIEW", GuiAutoLayout::LayoutHorizontalRightToLeft);
+    cargoView->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax)->setPosition(0, 50, ATopRight);
+
+    cargoInfo = new GuiAutoLayout(cargoView, "CARGO_INFO", GuiAutoLayout::LayoutVerticalTopToBottom);
+    cargoInfo->setSize(COLUMN_WIDTH, GuiElement::GuiSizeMax);
+
+    GuiAutoLayout *cargoActions = new GuiAutoLayout(cargoView, "CARGO_ACTIONS", GuiAutoLayout::LayoutVerticalTopToBottom);
+    cargoActions->setSize(COLUMN_WIDTH, GuiElement::GuiSizeMax)->setPosition(0, 100, ATopRight);
+
+    launch_button = new GuiButton(cargoActions, "LAUNCH_DRONE_BUTTON", "Launch", [this]() {
         if (my_spaceship)
             my_spaceship->commandLaunchCargo(index);
     });
     launch_button->setSize(COLUMN_WIDTH, 40);
 
-    GuiElement *energyControl = new GuiElement(sideBar, "ENERGY_CONTROL");
+    GuiElement *energyControl = new GuiElement(cargoActions, "ENERGY_CONTROL");
     energyControl->setSize(COLUMN_WIDTH, 40);
 
     energy_slider = new GuiSlider(energyControl, "ENERGY_SLIDER", 0.0, 10.0, 0.0, [this](float value) {
@@ -97,18 +106,38 @@ DockMasterScreen::DockMasterScreen(GuiContainer *owner)
     energy_bar = new GuiProgressbar(energyControl, "ENERGY_BAR", 0.0, 10.0, 0.0);
     energy_bar->setColor(sf::Color(192, 192, 32, 128))->setText("Energy")->setDrawBackground(false)->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax)->setMargins(10, 0, 10, 0);
 
-    cargoInfo = new GuiAutoLayout(sideBar, "CARGO_INFO", GuiAutoLayout::LayoutVerticalTopToBottom);
-    cargoInfo->setSize(COLUMN_WIDTH, GuiElement::GuiSizeMax);
+    GuiAutoLayout *tacticalPanel = new GuiAutoLayout(rightSide, "TACTICAL_PANEL", GuiAutoLayout::LayoutHorizontalRightToLeft);
+    tacticalPanel->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
 
+    // 5U tactical radar with piloting features.
+    GuiRadarView *radar = new GuiRadarView(tacticalPanel, "TACTICAL_RADAR", 2000.0, nullptr, my_spaceship);
+    radar->setSize(GuiElement::GuiSizeMatchHeight, GuiElement::GuiSizeMax);
+    radar->setRangeIndicatorStepSize(1000.0)->shortRange()->enableCallsigns()->enableHeadingIndicators()->setStyle(GuiRadarView::Circular);
+    float direction = 0;
+    radar->setCallbacks(
+        [this, &direction](sf::Vector2f position) {
+            auto diff = position - my_spaceship->getPosition();
+            direction = sf::angleDifference(sf::vector2ToAngle(diff), my_spaceship->getRotation());
+            my_spaceship->commandSetTractorBeamDirection(direction);
+            my_spaceship->commandSetTractorBeamRange(sf::length(diff));
+        },
+        [this, direction](sf::Vector2f position) {
+            auto diff = position - my_spaceship->getPosition();
+            my_spaceship->commandSetTractorBeamRange(sf::length(diff));
+            float arc = sf::angleDifference(sf::vector2ToAngle(diff), direction) * 2;
+            my_spaceship->commandSetTractorBeamArc(arc);
+        },
+        [](sf::Vector2f position) {}
+    );
     (new GuiCustomShipFunctions(this, dockMaster, "CUSTOM_FUNCTIONS", my_spaceship))->setPosition(-20, 120, ATopRight)->setSize(250, GuiElement::GuiSizeMax);
 
-    overlay = new GuiOverlay(this, "OVERLAY", sf::Color(0, 0, 0, 128));
-    overlay->setBlocking(true)->setPosition(COLUMN_WIDTH, 100, ATopLeft)->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
+    overlay = new GuiOverlay(cargoView, "OVERLAY", sf::Color(0, 0, 0, 128));
+    overlay->setBlocking(true)->setPosition(0, 50, ATopLeft)->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
     overlay_label = new GuiLabel(overlay, "OVERLAY_LABEL", "Transporting cargo out", 30);
     overlay_label->setPosition(0, 0, ACenter)->setSize(COLUMN_WIDTH, 50);
     distance_bar = new GuiProgressbar(overlay, "DISTANCE_BAR", 0.0, 1.0, 0.0);
     distance_bar->setPosition(0, 50, ACenter)->setSize(COLUMN_WIDTH, 50);
-    (new GuiPowerDamageIndicator(distance_bar, "DOCKS_DPI", SYS_Docks, ATopCenter, my_spaceship))->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
+    (new GuiPowerDamageIndicator(distance_bar, "", SYS_Docks, ATopCenter, my_spaceship))->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
 
     cancel_move_button = new GuiButton(overlay, "CANCEL_MOVE_BUTTON", "pull cargo back", [this]() {
         my_spaceship->commandCancelMoveCargo(index);
@@ -156,7 +185,7 @@ void DockMasterScreen::onDraw(sf::RenderTarget &window)
         switch (dockData.state)
         {
         case Empty:
-            sideBar->setVisible(false);
+            cargoView->setVisible(false);
             model->setModel(nullptr);
             overlay->setVisible(true);
             overlay_label->setText("Empty");
@@ -190,7 +219,7 @@ void DockMasterScreen::onDraw(sf::RenderTarget &window)
 void DockMasterScreen::displayDroneDetails(Dock &dockData)
 {
     P<Cargo> cargo = dockData.getCargo();
-    sideBar->setVisible(true);
+    cargoView->setVisible(true);
 
     unsigned int cnt = 0;
     for(std::tuple<string, string, string> e : cargo->getEntries())
