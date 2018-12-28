@@ -246,7 +246,9 @@ public:
     void commandSetAlertLevel(EAlertLevel level);
     void commandHackingFinished(P<SpaceObject> target, string target_system);
     void commandCustomFunction(string name);
-
+    void commandSetTractorBeamDirection(float direction);
+    void commandSetTractorBeamArc(float arc);
+    void commandSetTractorBeamRange(float range);
     virtual void onReceiveServerCommand(sf::Packet& packet) override;
 
     // Template function

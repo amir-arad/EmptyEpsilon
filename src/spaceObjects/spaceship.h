@@ -4,6 +4,7 @@
 #include "shipTemplateBasedObject.h"
 #include "spaceStation.h"
 #include "spaceshipParts/beamWeapon.h"
+#include "spaceshipParts/tractorBeam.h"
 #include "spaceshipParts/weaponTube.h"
 #include "spaceshipParts/dock.h"
 
@@ -159,7 +160,7 @@ public:
     int beam_frequency;
     ESystem beam_system_target;
     BeamWeapon beam_weapons[max_beam_weapons];
-
+    TractorBeam tractor_beam;
     /**
      * Frequency setting of the shields.
      */
@@ -181,6 +182,8 @@ public:
      * Draw this ship on the radar.
      */
     virtual void drawOnRadar(sf::RenderTarget& window, sf::Vector2f position, float scale, bool long_range) override;
+    void drawBeamOnRadar(sf::RenderTarget& window, sf::Vector2f position, float scale, 
+        sf::Color color, sf::Vector2f beam_position, float beam_direction, float beam_arc, float beam_range);
     virtual void drawOnGMRadar(sf::RenderTarget& window, sf::Vector2f position, float scale, bool long_range) override;
 
     virtual void update(float delta) override;
