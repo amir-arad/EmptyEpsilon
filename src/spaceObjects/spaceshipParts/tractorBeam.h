@@ -6,16 +6,24 @@
 #include "spaceObjects/spaceObject.h"
 class SpaceShip;
 
+enum ETractorBeamMode
+{
+    TBM_Off,        // Tractor beam off
+    TBM_Pull,       // pull objects to ship
+    TBM_Push,       // push objects away from ship
+    TBM_Hold        // hold objects near ship
+};
+
 class TractorBeam : public sf::NonCopyable
 {
 protected:
-
     //Beam configuration
     float max_area; // Value greater than or equal to 0
     float drag_per_second; // Value greater than 0
     SpaceShip* parent; //The ship that this beam weapon is attached to.
 
     // Beam state
+    ETractorBeamMode mode;
     float arc; 
     float direction;
     float range;
@@ -25,6 +33,9 @@ public:
     TractorBeam();
 
     void setParent(SpaceShip* parent);
+
+    ETractorBeamMode getMode();
+    void setMode(ETractorBeamMode mode);
 
     float getMaxArea();
     void setMaxArea(float max_area);

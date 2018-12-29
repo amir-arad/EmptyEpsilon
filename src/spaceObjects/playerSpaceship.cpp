@@ -185,6 +185,7 @@ static const int16_t CMD_SET_DOCK_ENERGY_REQUEST = 0x003D;
 static const int16_t CMD_SET_TRACTOR_BEAM_DIRECTION = 0x003E;
 static const int16_t CMD_SET_TRACTOR_BEAM_ARC = 0x003F;
 static const int16_t CMD_SET_TRACTOR_BEAM_RANGE = 0x0040;
+static const int16_t CMD_SET_TRACTOR_BEAM_MODE = 0x0041;
 
 string alertLevelToString(EAlertLevel level)
 {
@@ -1568,6 +1569,13 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sf::Packet& pack
         }
     }
     break;
+    case CMD_SET_TRACTOR_BEAM_MODE:
+    {
+        int mode;
+        packet >> mode;
+        tractor_beam.setMode(ETractorBeamMode(mode));
+    }
+    break;
     }
 }
 
@@ -1919,6 +1927,11 @@ void PlayerSpaceship::commandSetTractorBeamArc(float arc){
 void PlayerSpaceship::commandSetTractorBeamRange(float range){
     sf::Packet packet;
     packet << CMD_SET_TRACTOR_BEAM_RANGE << range;
+    sendClientCommand(packet);
+}
+void PlayerSpaceship::commandSetTractorBeamMode(ETractorBeamMode mode){
+    sf::Packet packet;
+    packet << CMD_SET_TRACTOR_BEAM_MODE << int(mode);
     sendClientCommand(packet);
 }
 

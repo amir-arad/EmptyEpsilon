@@ -4,7 +4,7 @@
 #include "spaceObjects/beamEffect.h"
 #include "spaceObjects/spaceObject.h"
 
-TractorBeam::TractorBeam() : max_area(0), drag_per_second(0), parent(nullptr), arc(0), direction(0), range(0) {}
+TractorBeam::TractorBeam() : max_area(0), drag_per_second(0), parent(nullptr), mode(TBM_Off), arc(0), direction(0), range(0) {}
 
 void TractorBeam::setParent(SpaceShip* parent)
 {
@@ -16,6 +16,16 @@ void TractorBeam::setParent(SpaceShip* parent)
     parent->registerMemberReplication(&arc);
     parent->registerMemberReplication(&direction);
     parent->registerMemberReplication(&range);
+}
+
+void TractorBeam::setMode(ETractorBeamMode mode)
+{
+    this->mode = mode;
+}
+
+ETractorBeamMode TractorBeam::getMode()
+{
+    return mode;
 }
 
 void TractorBeam::setMaxArea(float max_area)
@@ -91,26 +101,40 @@ float TractorBeam::getDragSpeed()
 
 void TractorBeam::update(float delta)
 {
-    if (game_server && range > 0.0 && delta > 0)
+    if (game_server && mode > TBM_Off && range > 0.0 && delta > 0)
     {
         float dragCapability = delta * getDragSpeed();
+
         foreach(SpaceObject, target, space_object_list)
         {
             if (target != parent) {
                 // Get the angle to the target.
-                sf::Vector2f diff = target->getPosition() - parent->getPosition();
-                float target_distance = sf::length(diff) - (parent->getRadius() + target->getRadius()) / 2.0;
-                float angle = sf::vector2ToAngle(diff);
-                float angle_diff = sf::angleDifference(direction + parent->getRotation(), angle);
 
-                // If the target is in the beam's arc and range and the beam can consume enough energy
-                if (target_distance < range && fabsf(angle_diff) < arc / 2.0)
+                sf::Vector2f diff = target->getPosition() - parent->getPosition();
+                float angle_diff = fabsf(sf::angleDifference(direction + parent->getRotation(), sf::vector2ToAngle(diff)));
+
+                // If the target is in the beam's arc and range 
+                if (sf::length(diff) < range && angle_diff < arc / 2.0)
                 {
-                    float distanceToDrag = std::min(fabsf(target_distance - (range/2)), dragCapability);
+                    sf::Vector2f destination;
+                    switch(mode) {
+                        case TBM_Pull : 
+                            destination = parent->getPosition();
+                            break;
+                        case TBM_Push :
+                            destination = parent->getPosition() + normalize(target->getPosition() - parent->getPosition()) * (range * 2);
+                            break;
+                        case TBM_Hold :
+                            destination = parent->getPosition() + normalize(target->getPosition() - parent->getPosition()) * (range / 2);
+                            break;
+                    }
+                    diff = target->getPosition() - destination;
+                    float target_distance = std::max(0.0f, sf::length(diff) - parent->getRadius() - target->getRadius());
+                    float distanceToDrag = std::min(target_distance, dragCapability);
                     if (parent->useEnergy(energy_per_target_u * distanceToDrag))
                     {
                         P<PlayerSpaceship> target_ship = target;
-                        if (target_distance < dragCapability && target_ship)
+                        if (target_distance < dragCapability && target_ship && mode == TBM_Pull)
                         {
                             // if tractor beam is dragging a ship into parent, force docking
                             target_ship->requestDock(parent);

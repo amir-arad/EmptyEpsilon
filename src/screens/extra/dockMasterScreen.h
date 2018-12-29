@@ -23,6 +23,7 @@ class Dock;
 class GuiTractorBeamControl : public GuiAutoLayout
 {
 private:
+    GuiSelector* mode_slector;
     GuiSlider* arc_slider;
     GuiSlider* direction_slider;
     GuiSlider* range_slider;

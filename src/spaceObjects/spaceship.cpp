@@ -383,7 +383,7 @@ void SpaceShip::drawOnRadar(sf::RenderTarget& window, sf::Vector2f position, flo
 
         // Draw beam arcs only if the beam has a range. A beam with range 0
         // effectively doesn't exist; exit if that's the case.
-        if (tractor_beam.getRange())
+        if (tractor_beam.getMode() != TBM_Off && tractor_beam.getRange())
         {
             // TODO: Make this color configurable.
             sf::Color color = sf::Color::Cyan;

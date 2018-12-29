@@ -28,6 +28,15 @@ const int COLUMN_WIDTH = 400;
 
 GuiTractorBeamControl::GuiTractorBeamControl(GuiContainer* owner, string id): GuiAutoLayout(owner, id, GuiAutoLayout::LayoutVerticalTopToBottom){
     this->setSize(GuiElement::GuiSizeMax, BEAM_PANEL_HEIGHT);
+
+    mode_slector = new GuiSelector(this, "MODE_SELECTOR", [this](int index, string value) {
+        if (my_spaceship)
+            my_spaceship->commandSetTractorBeamMode(ETractorBeamMode(index));
+    });
+    mode_slector->setOptions({"Off", "Pull", "Push", "Hold"});
+    mode_slector->setSelectionIndex(0);
+    mode_slector->setSize(GuiElement::GuiSizeMax, 30);
+
     (new GuiLabel(this, "", "Arc:", 20))->setSize(GuiElement::GuiSizeMax, 30);
     arc_slider = new GuiSlider(this, "", 0.0, 360.0, 0.0, [this](float value) {
         if (my_spaceship) my_spaceship->commandSetTractorBeamArc(value);
@@ -54,6 +63,7 @@ void GuiTractorBeamControl::onDraw(sf::RenderTarget& window)
 {
     GuiAutoLayout::onDraw(window);
     if (my_spaceship){
+        mode_slector->setSelectionIndex(int(my_spaceship->tractor_beam.getMode()));
         arc_slider->setValue(my_spaceship->tractor_beam.getArc());
         direction_slider->setValue(sf::angleDifference(0.0f, my_spaceship->tractor_beam.getDirection()));
         range_slider->setValue(my_spaceship->tractor_beam.getRange());
