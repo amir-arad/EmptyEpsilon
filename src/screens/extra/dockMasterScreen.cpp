@@ -30,19 +30,19 @@ GuiTractorBeamControl::GuiTractorBeamControl(GuiContainer* owner, string id): Gu
     this->setSize(GuiElement::GuiSizeMax, BEAM_PANEL_HEIGHT);
     (new GuiLabel(this, "", "Arc:", 20))->setSize(GuiElement::GuiSizeMax, 30);
     arc_slider = new GuiSlider(this, "", 0.0, 360.0, 0.0, [this](float value) {
-        my_spaceship->commandSetTractorBeamArc(value);
+        if (my_spaceship) my_spaceship->commandSetTractorBeamArc(value);
     });
     arc_slider->addOverlay()->setSize(GuiElement::GuiSizeMax, 30);
 
     (new GuiLabel(this, "", "Direction:", 20))->setSize(GuiElement::GuiSizeMax, 30);
     direction_slider = new GuiSlider(this, "", -180.0, 180.0, 0.0, [this](float value) {
-        my_spaceship->commandSetTractorBeamDirection(value);
+        if (my_spaceship) my_spaceship->commandSetTractorBeamDirection(value);
     });
     direction_slider->addOverlay()->setSize(GuiElement::GuiSizeMax, 30);
 
     (new GuiLabel(this, "", "Range:", 20))->setSize(GuiElement::GuiSizeMax, 30);
     range_slider = new GuiSlider(this, "", 0.0, 2000.0, 0.0, [this](float value) {
-        my_spaceship->commandSetTractorBeamRange(roundf(value / 100) * 100);
+        if (my_spaceship) my_spaceship->commandSetTractorBeamRange(value);
     });
     range_slider->addOverlay()->setSize(GuiElement::GuiSizeMax, 30);
 }
@@ -50,9 +50,11 @@ GuiTractorBeamControl::GuiTractorBeamControl(GuiContainer* owner, string id): Gu
 void GuiTractorBeamControl::onDraw(sf::RenderTarget& window)
 {
     GuiAutoLayout::onDraw(window);
-    arc_slider->setValue(my_spaceship->tractor_beam.getArc());
-    direction_slider->setValue(sf::angleDifference(0.0f, my_spaceship->tractor_beam.getDirection()));
-    range_slider->setValue(my_spaceship->tractor_beam.getRange());
+    if (my_spaceship){
+        arc_slider->setValue(my_spaceship->tractor_beam.getArc());
+        direction_slider->setValue(sf::angleDifference(0.0f, my_spaceship->tractor_beam.getDirection()));
+        range_slider->setValue(my_spaceship->tractor_beam.getRange());
+    }
 }
 
 DockMasterScreen::DockMasterScreen(GuiContainer *owner)
@@ -75,7 +77,7 @@ DockMasterScreen::DockMasterScreen(GuiContainer *owner)
     // the index in the button list is assumed to equal the index of the dock
     for (int n = 0; n < max_docks_count; n++)
     {
-        if (my_spaceship->docks[n].dock_type != Dock_Disabled)
+        if (my_spaceship && my_spaceship->docks[n].dock_type != Dock_Disabled)
         {
             string state = my_spaceship ? " (" + getDockStateName(my_spaceship->docks[n].state) + ")" : "";
             docks->addEntry("dock-" + std::to_string(n + 1) + state, "dock-" + std::to_string(n + 1) + " " + getDockTypeName(my_spaceship->docks[n].dock_type));
@@ -175,7 +177,7 @@ DockMasterScreen::DockMasterScreen(GuiContainer *owner)
     (new GuiPowerDamageIndicator(distance_bar, "", SYS_Docks, ATopCenter, my_spaceship))->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
 
     cancel_move_button = new GuiButton(overlay, "CANCEL_MOVE_BUTTON", "pull cargo back", [this]() {
-        my_spaceship->commandCancelMoveCargo(index);
+        if(my_spaceship) my_spaceship->commandCancelMoveCargo(index);
     });
     cancel_move_button->setPosition(0, 100, ACenter)->setSize(COLUMN_WIDTH, 50);
 
@@ -186,13 +188,15 @@ DockMasterScreen::DockMasterScreen(GuiContainer *owner)
 
 void DockMasterScreen::selectDock(int index)
 {
-    title->setText(docks->getEntryValue(index));
-    this->index = index;
-    docks->setSelectionIndex(index);
-    auto &dockData = my_spaceship->docks[index];
-    launch_button->setVisible(dockData.dock_type == Dock_Launcher);
-    energy_bar->setVisible(dockData.dock_type == Dock_Energy);
-    energy_slider->setVisible(dockData.dock_type == Dock_Energy);
+    if (my_spaceship) {
+        title->setText(docks->getEntryValue(index));
+        this->index = index;
+        docks->setSelectionIndex(index);
+        auto &dockData = my_spaceship->docks[index];
+        launch_button->setVisible(dockData.dock_type == Dock_Launcher);
+        energy_bar->setVisible(dockData.dock_type == Dock_Energy);
+        energy_slider->setVisible(dockData.dock_type == Dock_Energy);
+    }
 }
 
 void DockMasterScreen::onDraw(sf::RenderTarget &window)
