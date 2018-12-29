@@ -33,18 +33,21 @@ GuiTractorBeamControl::GuiTractorBeamControl(GuiContainer* owner, string id): Gu
         if (my_spaceship) my_spaceship->commandSetTractorBeamArc(value);
     });
     arc_slider->addOverlay()->setSize(GuiElement::GuiSizeMax, 30);
+    (new GuiPowerDamageIndicator(arc_slider, "", SYS_Docks, ATopCenter, my_spaceship))->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
 
     (new GuiLabel(this, "", "Direction:", 20))->setSize(GuiElement::GuiSizeMax, 30);
     direction_slider = new GuiSlider(this, "", -180.0, 180.0, 0.0, [this](float value) {
         if (my_spaceship) my_spaceship->commandSetTractorBeamDirection(value);
     });
     direction_slider->addOverlay()->setSize(GuiElement::GuiSizeMax, 30);
+    (new GuiPowerDamageIndicator(direction_slider, "", SYS_Docks, ATopCenter, my_spaceship))->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
 
     (new GuiLabel(this, "", "Range:", 20))->setSize(GuiElement::GuiSizeMax, 30);
     range_slider = new GuiSlider(this, "", 0.0, 2000.0, 0.0, [this](float value) {
         if (my_spaceship) my_spaceship->commandSetTractorBeamRange(value);
     });
     range_slider->addOverlay()->setSize(GuiElement::GuiSizeMax, 30);
+    (new GuiPowerDamageIndicator(range_slider, "", SYS_Docks, ATopCenter, my_spaceship))->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
 }
 
 void GuiTractorBeamControl::onDraw(sf::RenderTarget& window)
@@ -110,6 +113,7 @@ DockMasterScreen::DockMasterScreen(GuiContainer *owner)
             my_spaceship->commandMoveCargo(index);
     });
     moveButton->setSize(COLUMN_WIDTH, 40);
+    (new GuiPowerDamageIndicator(moveButton, "", SYS_Docks, ATopCenter, my_spaceship))->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
 
     cargoView = new GuiAutoLayout(dockDetails, "CARGO_VIEW", GuiAutoLayout::LayoutHorizontalRightToLeft);
     cargoView->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax)->setPosition(0, 50, ATopRight);
@@ -137,6 +141,7 @@ DockMasterScreen::DockMasterScreen(GuiContainer *owner)
 
     energy_bar = new GuiProgressbar(energyControl, "ENERGY_BAR", 0.0, 10.0, 0.0);
     energy_bar->setColor(sf::Color(192, 192, 32, 128))->setText("Energy")->setDrawBackground(false)->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax)->setMargins(10, 0, 10, 0);
+    (new GuiPowerDamageIndicator(energy_bar, "", SYS_Docks, ATopCenter, my_spaceship))->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
 
     GuiAutoLayout *tacticalPanel = new GuiAutoLayout(rightSide, "TACTICAL_PANEL", GuiAutoLayout::LayoutHorizontalRightToLeft);
     tacticalPanel->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
