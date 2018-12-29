@@ -11,8 +11,8 @@ void TractorBeam::setParent(SpaceShip* parent)
     assert(!this->parent);
     this->parent = parent;
 
-    // parent->registerMemberReplication(&max_area);
-    // parent->registerMemberReplication(&drag_per_second);
+    parent->registerMemberReplication(&max_area);
+    parent->registerMemberReplication(&drag_per_second);
     parent->registerMemberReplication(&arc);
     parent->registerMemberReplication(&direction);
     parent->registerMemberReplication(&range);
