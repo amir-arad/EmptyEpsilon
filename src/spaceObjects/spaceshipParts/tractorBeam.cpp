@@ -5,14 +5,6 @@
 #include "spaceObjects/spaceObject.h"
 
 TractorBeam::TractorBeam() : max_area(0), drag_per_second(0), parent(nullptr), arc(0), direction(0), range(0) {}
-// TractorBeam::TractorBeam() {
-//     parent = nullptr;
-//     max_area = 0;
-//     drag_per_second = 0;
-//     arc = 0;
-//     direction = 0;
-//     range = 0;
-// }
 
 void TractorBeam::setParent(SpaceShip* parent)
 {

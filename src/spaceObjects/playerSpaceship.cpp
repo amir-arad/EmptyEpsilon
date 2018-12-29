@@ -1565,34 +1565,6 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sf::Packet& pack
         }
     }
     break;
-        break;
-    case CMD_SET_TRACTOR_BEAM_DIRECTION:
-        {
-            float direction;
-            packet >> direction;
-            tractor_beam.setDirection(direction);
-        }
-        break;
-    case CMD_SET_TRACTOR_BEAM_ARC:
-        {
-            float arc;
-            packet >> arc;
-            if (tractor_beam.getMaxArea() > 0){
-                tractor_beam.setArc(arc);
-                tractor_beam.setRange(std::min(tractor_beam.getRange(), tractor_beam.getMaxRange(arc)));
-            }
-        }
-        break;
-    case CMD_SET_TRACTOR_BEAM_RANGE:
-        {
-            float range;
-            packet >> range;
-            if (tractor_beam.getMaxArea() > 0){
-                tractor_beam.setRange(range);
-                tractor_beam.setArc(std::min(tractor_beam.getArc(), tractor_beam.getMaxArc(range)));
-            }
-        }
-        break;
     }
 }
 
