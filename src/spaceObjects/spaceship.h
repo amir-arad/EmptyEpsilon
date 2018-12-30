@@ -393,7 +393,15 @@ public:
 
     void setBeamWeaponEnergyPerFire(int index, float energy) { if (index < 0 || index >= max_beam_weapons) return; return beam_weapons[index].setEnergyPerFire(energy); }
     void setBeamWeaponHeatPerFire(int index, float heat) { if (index < 0 || index >= max_beam_weapons) return; return beam_weapons[index].setHeatPerFire(heat); }
-
+    void setTractorBeam(ETractorBeamMode mode, float arc, float direction, float range, float max_area, float drag_per_second)
+    {
+        tractor_beam.setMode(mode);
+        tractor_beam.setArc(arc);
+        tractor_beam.setDirection(direction);
+        tractor_beam.setRange(range);
+        tractor_beam.setMaxArea(max_area);
+        tractor_beam.setDragPerSecond(drag_per_second);
+    }
     void setWeaponTubeCount(int amount);
     int getWeaponTubeCount();
     EMissileWeapons getWeaponTubeLoadType(int index);
@@ -424,6 +432,7 @@ REGISTER_MULTIPLAYER_ENUM(EDockingState);
 REGISTER_MULTIPLAYER_ENUM(EScannedState);
 REGISTER_MULTIPLAYER_ENUM(EDockType);
 REGISTER_MULTIPLAYER_ENUM(EDockState);
+REGISTER_MULTIPLAYER_ENUM(ETractorBeamMode);
 
 
 string frequencyToString(int frequency);

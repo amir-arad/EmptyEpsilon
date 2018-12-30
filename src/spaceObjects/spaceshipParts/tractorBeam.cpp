@@ -148,3 +148,24 @@ void TractorBeam::update(float delta)
     }
 }
 
+string getTractorBeamModeName(ETractorBeamMode mode)
+{
+    switch(mode)
+    {
+    case TBM_Off:
+        return "Off";
+    case TBM_Pull:
+        return "Pull";
+    case TBM_Push:
+        return "Push";
+    case TBM_Hold:
+        return "Hold";
+    default:
+        return "UNK: " + string(int(mode));
+    }
+}
+
+#ifndef _MSC_VER
+// MFC: GCC does proper external template instantiation, VC++ doesn't.
+#include "tractorBeam.hpp"
+#endif

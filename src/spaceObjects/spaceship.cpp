@@ -66,6 +66,7 @@ REGISTER_SCRIPT_SUBCLASS_NO_CREATE(SpaceShip, ShipTemplateBasedObject)
     REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, setBeamWeaponTexture);
     REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, setBeamWeaponEnergyPerFire);
     REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, setBeamWeaponHeatPerFire);
+    REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, setTractorBeam);
     REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, setWeaponTubeCount);
     REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, getWeaponTubeCount);
     REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, getWeaponTubeLoadType);
@@ -1296,13 +1297,15 @@ string SpaceShip::getScriptExportModificationsOnTemplate()
         }
     }
 
-    // if (tractor_beam.getArc() != 0.0f
-    //     || tractor_beam.getDirection() != 0.0f
-    //     || tractor_beam.getRange() != 0.0f
-    //     || tractor_beam.getDragPerSecond() != ship_template->tractor_beam.getDragPerSecond())
-    // {
-    //     ret += ":setTractorBeam(" + string(tractor_beam.getArc(), 0) + ", " + string(tractor_beam.getDirection(), 0) + ", " + string(tractor_beam.getRange(), 0) + ", " + string(tractor_beam.getDragPerSecond(), 1) + ")";
-    // }
+    if (tractor_beam.getMaxArea() != ship_template->tractor_beam.getMaxArea()
+        || tractor_beam.getDragPerSecond() != ship_template->tractor_beam.getDragPerSecond()
+        || tractor_beam.getMode() != TBM_Off 
+        || tractor_beam.getArc() != 0.0f
+        || tractor_beam.getDirection() != 0.0f
+        || tractor_beam.getRange() != 0.0f)
+    {
+        ret += ":setTractorBeam(" + getTractorBeamModeName(tractor_beam.getMode()) + ", " + string(tractor_beam.getArc(), 0) + ", " + string(tractor_beam.getDirection(), 0) + ", " + string(tractor_beam.getRange(), 0) + ", " + string(tractor_beam.getMaxArea(), 0) + ", " + string(tractor_beam.getDragPerSecond(), 0) + ")";
+    }
     return ret;
 }
 

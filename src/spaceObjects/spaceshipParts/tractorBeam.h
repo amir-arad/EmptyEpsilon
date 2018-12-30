@@ -13,6 +13,9 @@ enum ETractorBeamMode
     TBM_Push,       // push objects away from ship
     TBM_Hold        // hold objects near ship
 };
+/* Define script conversion function for the EMissileWeapons enum. */
+template<> void convert<ETractorBeamMode>::param(lua_State* L, int& idx, ETractorBeamMode& es);
+template<> int convert<ETractorBeamMode>::returnType(lua_State* L, ETractorBeamMode es);
 
 class TractorBeam : public sf::NonCopyable
 {
@@ -51,14 +54,17 @@ public:
 
     void setRange(float range);
     float getRange();
-
-    void setPosition(sf::Vector3f position);
-    sf::Vector3f getPosition();
         
     float getDragSpeed();
     float getMaxArc(float range);
     float getMaxRange(float arc);
     void update(float delta);
 };
+string getTractorBeamModeName(ETractorBeamMode mode);
+
+#ifdef _MSC_VER
+// MFC: GCC does proper external template instantiation, VC++ doesn't.
+#include "tractorBeam.hpp"
+#endif
 
 #endif//TRACTOR_BEAM_H
