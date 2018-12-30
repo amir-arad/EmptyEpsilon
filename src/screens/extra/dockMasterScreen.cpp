@@ -26,8 +26,29 @@ const int BEAM_PANEL_HEIGHT = 290;
 const int COLUMN_WIDTH = 400;
 
 
-GuiTractorBeamControl::GuiTractorBeamControl(GuiContainer* owner, string id): GuiAutoLayout(owner, id, GuiAutoLayout::LayoutVerticalTopToBottom){
+GuiTractorBeamControl::GuiTractorBeamControl(GuiContainer* owner, string id): GuiAutoLayout(owner, id, GuiAutoLayout::LayoutVerticalBottomToTop){
     this->setSize(GuiElement::GuiSizeMax, BEAM_PANEL_HEIGHT);
+
+    arc_slider = new GuiSlider(this, "", 0.0, 90.0, 0.0, [this](float value) {
+        if (my_spaceship) my_spaceship->commandSetTractorBeamArc(value);
+    });
+    arc_slider->addOverlay()->setSize(GuiElement::GuiSizeMax, 30);
+    (new GuiPowerDamageIndicator(arc_slider, "", SYS_Docks, ATopCenter, my_spaceship))->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
+    (new GuiLabel(this, "", "Arc:", 20))->setSize(GuiElement::GuiSizeMax, 30);
+
+    direction_slider = new GuiSlider(this, "", -179.9, 180.0, 0.0, [this](float value) {
+        if (my_spaceship) my_spaceship->commandSetTractorBeamDirection(value);
+    });
+    direction_slider->addOverlay()->setSize(GuiElement::GuiSizeMax, 30);
+    (new GuiPowerDamageIndicator(direction_slider, "", SYS_Docks, ATopCenter, my_spaceship))->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
+    (new GuiLabel(this, "", "Direction:", 20))->setSize(GuiElement::GuiSizeMax, 30);
+
+    range_slider = new GuiSlider(this, "", 0.0, 2000.0, 0.0, [this](float value) {
+        if (my_spaceship) my_spaceship->commandSetTractorBeamRange(value);
+    });
+    range_slider->addOverlay()->setSize(GuiElement::GuiSizeMax, 30);
+    (new GuiPowerDamageIndicator(range_slider, "", SYS_Docks, ATopCenter, my_spaceship))->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
+    (new GuiLabel(this, "", "Range:", 20))->setSize(GuiElement::GuiSizeMax, 30);
 
     mode_slector = new GuiSelector(this, "MODE_SELECTOR", [this](int index, string value) {
         if (my_spaceship)
@@ -36,27 +57,6 @@ GuiTractorBeamControl::GuiTractorBeamControl(GuiContainer* owner, string id): Gu
     mode_slector->setOptions({"Off", "Pull", "Push", "Hold"});
     mode_slector->setSelectionIndex(0);
     mode_slector->setSize(GuiElement::GuiSizeMax, 30);
-
-    (new GuiLabel(this, "", "Arc:", 20))->setSize(GuiElement::GuiSizeMax, 30);
-    arc_slider = new GuiSlider(this, "", 0.0, 360.0, 0.0, [this](float value) {
-        if (my_spaceship) my_spaceship->commandSetTractorBeamArc(value);
-    });
-    arc_slider->addOverlay()->setSize(GuiElement::GuiSizeMax, 30);
-    (new GuiPowerDamageIndicator(arc_slider, "", SYS_Docks, ATopCenter, my_spaceship))->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
-
-    (new GuiLabel(this, "", "Direction:", 20))->setSize(GuiElement::GuiSizeMax, 30);
-    direction_slider = new GuiSlider(this, "", -180.0, 180.0, 0.0, [this](float value) {
-        if (my_spaceship) my_spaceship->commandSetTractorBeamDirection(value);
-    });
-    direction_slider->addOverlay()->setSize(GuiElement::GuiSizeMax, 30);
-    (new GuiPowerDamageIndicator(direction_slider, "", SYS_Docks, ATopCenter, my_spaceship))->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
-
-    (new GuiLabel(this, "", "Range:", 20))->setSize(GuiElement::GuiSizeMax, 30);
-    range_slider = new GuiSlider(this, "", 0.0, 2000.0, 0.0, [this](float value) {
-        if (my_spaceship) my_spaceship->commandSetTractorBeamRange(value);
-    });
-    range_slider->addOverlay()->setSize(GuiElement::GuiSizeMax, 30);
-    (new GuiPowerDamageIndicator(range_slider, "", SYS_Docks, ATopCenter, my_spaceship))->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
 }
 
 void GuiTractorBeamControl::onDraw(sf::RenderTarget& window)
@@ -125,8 +125,11 @@ DockMasterScreen::DockMasterScreen(GuiContainer *owner)
     moveButton->setSize(COLUMN_WIDTH, 40);
     (new GuiPowerDamageIndicator(moveButton, "", SYS_Docks, ATopCenter, my_spaceship))->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
 
-    cargoView = new GuiAutoLayout(dockDetails, "CARGO_VIEW", GuiAutoLayout::LayoutHorizontalRightToLeft);
-    cargoView->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax)->setPosition(0, 50, ATopRight);
+    GuiElement *cargoViewParent = new GuiElement(dockDetails, "");
+    cargoViewParent->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax)->setPosition(0, 50, ATopRight);
+
+    cargoView = new GuiAutoLayout(cargoViewParent, "CARGO_VIEW", GuiAutoLayout::LayoutHorizontalRightToLeft);
+    cargoView->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax)->setPosition(0, 0, ATopRight);
 
     cargoInfo = new GuiAutoLayout(cargoView, "CARGO_INFO", GuiAutoLayout::LayoutVerticalTopToBottom);
     cargoInfo->setSize(COLUMN_WIDTH, GuiElement::GuiSizeMax);
@@ -160,31 +163,13 @@ DockMasterScreen::DockMasterScreen(GuiContainer *owner)
     GuiRadarView *radar = new GuiRadarView(tacticalPanel, "TACTICAL_RADAR", 2000.0, nullptr, my_spaceship);
     radar->setSize(BEAM_PANEL_HEIGHT, BEAM_PANEL_HEIGHT);
     radar->setRangeIndicatorStepSize(1000.0)->shortRange()->enableCallsigns()->enableHeadingIndicators()->setStyle(GuiRadarView::Circular);
-    // WIP experimantal beam wysiwyg control
-    // float direction = 0;
-    // radar->setCallbacks(
-    //     [this, &direction](sf::Vector2f position) {
-    //         auto diff = position - my_spaceship->getPosition();
-    //         direction = sf::angleDifference(sf::vector2ToAngle(diff), my_spaceship->getRotation());
-    //         my_spaceship->commandSetTractorBeamDirection(direction);
-    //         my_spaceship->commandSetTractorBeamRange(sf::length(diff));
-    //     },
-    //     [this, direction](sf::Vector2f position) {
-    //         auto diff = position - my_spaceship->getPosition();
-    //         my_spaceship->commandSetTractorBeamRange(sf::length(diff));
-    //         auto angle = sf::vector2ToAngle(diff);
-    //         float arc = sf::angleDifference(angle, direction) * 2;
-    //         my_spaceship->commandSetTractorBeamArc(std::abs(arc));
-    //     },
-    //     [](sf::Vector2f position) {}
-    // );
     GuiTractorBeamControl *beam_control = new GuiTractorBeamControl(tacticalPanel, "BEAM_CONFIG");
     beam_control->setSize(BEAM_PANEL_HEIGHT, BEAM_PANEL_HEIGHT);
     
     (new GuiCustomShipFunctions(this, dockMaster, "CUSTOM_FUNCTIONS", my_spaceship))->setPosition(-20, 120, ATopRight)->setSize(250, GuiElement::GuiSizeMax);
 
-    overlay = new GuiOverlay(cargoView, "OVERLAY", sf::Color(0, 0, 0, 128));
-    overlay->setBlocking(true)->setPosition(0, 50, ATopLeft)->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
+    overlay = new GuiOverlay(cargoViewParent, "OVERLAY", sf::Color(0, 0, 0, 128));
+    overlay->setBlocking(true)->setPosition(0, 0, ATopLeft)->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
     overlay_label = new GuiLabel(overlay, "OVERLAY_LABEL", "Transporting cargo out", 30);
     overlay_label->setPosition(0, 0, ACenter)->setSize(COLUMN_WIDTH, 50);
     distance_bar = new GuiProgressbar(overlay, "DISTANCE_BAR", 0.0, 1.0, 0.0);
