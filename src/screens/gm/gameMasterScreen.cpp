@@ -42,12 +42,12 @@ GameMasterScreen::GameMasterScreen()
             gameMasterActions->commandSetGameSpeed(0.0f);
     });
     pause_button->setValue(engine->getGameSpeed() == 0.0f)->setPosition(20, 20, ATopLeft)->setSize(250, 50);
-    if (gameGlobalInfo->intercept_all_comms_to_gm < CGI_Always){
-        intercept_comms_button = new GuiToggleButton(this, "INTERCEPT_COMMS_BUTTON", "Intercept all comms", [this](bool value) {
-            gameMasterActions->commandInterceptAllCommsToGm(value);
-        });
-        intercept_comms_button->setValue((int)gameGlobalInfo->intercept_all_comms_to_gm)->setTextSize(20)->setPosition(300, 20, ATopLeft)->setSize(200, 25);
-    }
+    
+    intercept_comms_button = new GuiToggleButton(this, "INTERCEPT_COMMS_BUTTON", "Intercept all comms", [this](bool value) {
+        gameMasterActions->commandInterceptAllCommsToGm(value);
+    });
+    intercept_comms_button->setValue((int)gameGlobalInfo->intercept_all_comms_to_gm)->setTextSize(20)->setPosition(300, 20, ATopLeft)->setSize(200, 25);
+    intercept_comms_button->setVisible(gameGlobalInfo->intercept_all_comms_to_gm < CGI_Always);
     
     faction_selector = new GuiSelector(this, "FACTION_SELECTOR", [this](int index, string value) {
         gameMasterActions->commandSetFactionId(index, targets.getTargets());
@@ -138,6 +138,19 @@ GameMasterScreen::GameMasterScreen()
     // tweaks only work on the server
     tweak_button->setPosition(20, -170, ABottomLeft)->setSize(250, 50)->setEnable(bool(game_server))->hide();
 
+
+    possess_button = new GuiButton(this, "POSSESS_OBJECT", "Possess", [this]() {
+        for(P<SpaceObject> obj : targets.getTargets())
+        {
+            auto cpu = P<CpuShip>(obj);
+            if (cpu)
+            {
+                possess(cpu);
+                break;
+            }
+        }
+    });
+    possess_button->setPosition(20, -220, ABottomLeft)->setSize(250, 50)->hide();
 
     player_comms_hail = new GuiButton(this, "HAIL_PLAYER", "Hail ship", [this]() {
         for(P<SpaceObject> obj : targets.getTargets())
@@ -263,6 +276,7 @@ void GameMasterScreen::update(float delta)
 
     // Show tweak button.
     tweak_button->setVisible(has_object);
+    possess_button->setVisible(has_cpu_ship);
 
     order_layout->setVisible(has_cpu_ship);
     gm_script_options->setVisible(!has_cpu_ship);
@@ -479,4 +493,9 @@ string GameMasterScreen::getScriptExport(bool selected_only)
         output += "    " + line + "\n";
     }
     return output;
+}
+
+void GameMasterScreen::possess(P<CpuShip> target)
+{
+    
 }
