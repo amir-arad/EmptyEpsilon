@@ -28,6 +28,7 @@ class GameMasterScreen : public GuiCanvas, public Updatable
 private:
     TargetsContainer targets;
     P<SpaceObject> target;
+    P<CpuShip> possession_target;
     GuiRadarView* main_radar;
     GuiOverlay* box_selection_overlay;
     GuiSelector* faction_selector;
@@ -53,7 +54,7 @@ private:
     GuiToggleButton* intercept_comms_button;
     GuiButton* tweak_button;
     GuiButton* factions_button;
-    GuiButton* possess_button;
+    GuiToggleButton* possess_button;
     GuiButton* copy_scenario_button;
     GuiButton* copy_selected_button;
     GuiSelector* player_ship_selector;
@@ -89,7 +90,7 @@ public:
     string getScriptExport(bool selected_only);
 
     void possess(P<CpuShip> target);
-
+    void dePossess();
 };
 
 

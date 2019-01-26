@@ -138,16 +138,19 @@ GameMasterScreen::GameMasterScreen()
     // tweaks only work on the server
     tweak_button->setPosition(20, -170, ABottomLeft)->setSize(250, 50)->setEnable(bool(game_server))->hide();
 
-
-    possess_button = new GuiButton(this, "POSSESS_OBJECT", "Possess", [this]() {
-        for(P<SpaceObject> obj : targets.getTargets())
-        {
-            auto cpu = P<CpuShip>(obj);
-            if (cpu)
+    possess_button = new GuiToggleButton(this, "POSSESS_OBJECT", "Possess", [this](bool active) {
+        if (active){
+            for(P<SpaceObject> obj : targets.getTargets())
             {
-                possess(cpu);
-                break;
+                auto cpu = P<CpuShip>(obj);
+                if (cpu)
+                {
+                    possess(cpu);
+                    break;
+                }
             }
+        } else {
+            dePossess();
         }
     });
     possess_button->setPosition(20, -220, ABottomLeft)->setSize(250, 50)->hide();
@@ -239,6 +242,11 @@ void GameMasterScreen::update(float delta)
     bool has_cpu_ship = false;
     bool has_player_ship = false;
 
+    if (possess_button->isActive() && !possession_target){
+        // possession target probably died
+        dePossess();
+    }
+
     // Add and remove entries from the player ship list.
     for(int n=0; n<GameGlobalInfo::max_player_ships; n++)
     {
@@ -276,7 +284,7 @@ void GameMasterScreen::update(float delta)
 
     // Show tweak button.
     tweak_button->setVisible(has_object);
-    possess_button->setVisible(has_cpu_ship);
+    possess_button->setVisible(possess_button->isActive() || has_cpu_ship);
 
     order_layout->setVisible(has_cpu_ship);
     gm_script_options->setVisible(!has_cpu_ship);
@@ -386,10 +394,12 @@ void GameMasterScreen::onMouseDrag(sf::Vector2f position)
     case CD_DragViewOrOrder:
     case CD_DragView:
         click_and_drag_state = CD_DragView;
-        main_radar->setViewPosition(main_radar->getViewPosition() - (position - drag_previous_position));
-        if(!position_text_custom)
-            position_text->setText(getStringFromPosition(main_radar->getViewPosition()));
-        position -= (position - drag_previous_position);
+        if (!possess_button->isActive()){
+            main_radar->setViewPosition(main_radar->getViewPosition() - (position - drag_previous_position));
+            if(!position_text_custom)
+                position_text->setText(getStringFromPosition(main_radar->getViewPosition()));
+            position -= (position - drag_previous_position);
+        }
         break;
     case CD_DragObjects:
         gameMasterActions->commandMoveObjects(position - drag_previous_position, targets.getTargets());
@@ -495,7 +505,21 @@ string GameMasterScreen::getScriptExport(bool selected_only)
     return output;
 }
 
+void GameMasterScreen::dePossess()
+{
+    possession_target = nullptr;
+    main_radar->setTargetSpaceship(possession_target)->setRangeIndicatorStepSize(0.0)->disableCallsigns()->setAutoCentering(false)->disableGhostDots()->disableWaypoints()->disableHeadingIndicators();
+}
 void GameMasterScreen::possess(P<CpuShip> target)
 {
-    
+    possession_target = target;
+    /*
+    tube_controls = new GuiMissileTubeControls(this, "MISSILE_TUBES", target_spaceship);
+    tube_controls->setPosition(20, -20, ABottomLeft);
+    radar->enableTargetProjections(tube_controls);
+    */
+    main_radar->setTargetSpaceship(possession_target)->setRangeIndicatorStepSize(1000.0)->enableCallsigns()->setAutoCentering(true)->enableGhostDots()->enableWaypoints()->enableHeadingIndicators();
+    if (main_radar->getDistance() > 10000){
+        main_radar->setDistance(10000)->shortRange();
+    }
 }
