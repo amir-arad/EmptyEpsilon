@@ -46,6 +46,8 @@ REGISTER_SCRIPT_SUBCLASS(CpuShip, SpaceShip)
     REGISTER_SCRIPT_CLASS_FUNCTION(CpuShip, getOrderTarget);
 }
 
+REGISTER_MULTIPLAYER_ENUM(EAIOrder);
+
 REGISTER_MULTIPLAYER_CLASS(CpuShip, "CpuShip");
 CpuShip::CpuShip()
 : SpaceShip("CpuShip")
@@ -64,6 +66,8 @@ CpuShip::CpuShip()
         ai = ShipAIFactory::getAIFactory("default")(this);
     else
         ai = NULL;
+
+    registerMemberReplication(&orders, 1);
 }
 
 CpuShip::~CpuShip()
@@ -235,6 +239,15 @@ void CpuShip::orderDock(P<SpaceObject> object)
 void CpuShip::drawOnGMRadar(sf::RenderTarget& window, sf::Vector2f position, float scale, bool long_range)
 {
     SpaceShip::drawOnGMRadar(window, position, scale, long_range);
+    P<SpaceObject> target = getTarget();
+    if (target)
+    {
+        sf::VertexArray a(sf::Lines, 2);
+        a[0].position = position;
+        a[1].position = position + (target->getPosition() -  getPosition()) * scale;
+        a[0].color = a[1].color = sf::Color(255, 128, 128, 128);
+        window.draw(a);
+    }
     if (ai)
         ai->drawOnGMRadar(window, position, scale);
 }

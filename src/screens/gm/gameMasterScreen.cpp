@@ -508,6 +508,7 @@ string GameMasterScreen::getScriptExport(bool selected_only)
 void GameMasterScreen::dePossess()
 {
     possession_target = nullptr;
+    possess_button->setActive(false);
     main_radar->setTargetSpaceship(possession_target)->setRangeIndicatorStepSize(0.0)->disableCallsigns()->setAutoCentering(false)->disableGhostDots()->disableWaypoints()->disableHeadingIndicators();
 }
 void GameMasterScreen::possess(P<CpuShip> target)
