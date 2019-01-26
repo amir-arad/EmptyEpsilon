@@ -21,6 +21,8 @@
 #include "gui/gui2_keyvaluedisplay.h"
 #include "gui/gui2_textentry.h"
 
+#include "screenComponents/missileTubeControls.h"
+
 GameMasterScreen::GameMasterScreen()
 : click_and_drag_state(CD_None)
 {
@@ -507,18 +509,23 @@ string GameMasterScreen::getScriptExport(bool selected_only)
 
 void GameMasterScreen::dePossess()
 {
+    if(possession_target){
+        gameMasterActions->commandSetPosessed(possession_target, false);
+    }
     possession_target = nullptr;
     possess_button->setActive(false);
-    main_radar->setTargetSpaceship(possession_target)->setRangeIndicatorStepSize(0.0)->disableCallsigns()->setAutoCentering(false)->disableGhostDots()->disableWaypoints()->disableHeadingIndicators();
+    main_radar->setTargetSpaceship(possession_target)->disableTargetProjections()->setRangeIndicatorStepSize(0.0)->disableCallsigns()->setAutoCentering(false)->disableGhostDots()->disableWaypoints()->disableHeadingIndicators();
 }
 void GameMasterScreen::possess(P<CpuShip> target)
 {
     possession_target = target;
-    /*
-    tube_controls = new GuiMissileTubeControls(this, "MISSILE_TUBES", target_spaceship);
-    tube_controls->setPosition(20, -20, ABottomLeft);
-    radar->enableTargetProjections(tube_controls);
-    */
+    if(possession_target){
+        gameMasterActions->commandSetPosessed(possession_target, true);
+    }
+    // GuiMissileTubeControls *tube_controls = new GuiMissileTubeControls(this, "MISSILE_TUBES", possession_target);
+    // tube_controls->setPosition(20, -20, ABottomLeft);
+   // main_radar->enableTargetProjections(tube_controls);
+
     main_radar->setTargetSpaceship(possession_target)->setRangeIndicatorStepSize(1000.0)->enableCallsigns()->setAutoCentering(true)->enableGhostDots()->enableWaypoints()->enableHeadingIndicators();
     if (main_radar->getDistance() > 10000){
         main_radar->setDistance(10000)->shortRange();
