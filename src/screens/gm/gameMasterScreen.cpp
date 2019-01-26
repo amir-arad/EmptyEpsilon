@@ -34,6 +34,14 @@ GameMasterScreen::GameMasterScreen()
         [this](sf::Vector2f position) { this->onMouseDrag(position); },
         [this](sf::Vector2f position) { this->onMouseUp(position); }
     );
+    // Joystick controls.
+    main_radar->setJoystickCallbacks(
+        [this](float position) { this->onJoystickX(position);},
+        [this](float position) { this->onJoystickY(position);},
+        [this](float position) { this->onJoystickZ(position);},
+        [this](float position) { this->onJoystickR(position);}
+    );
+
     box_selection_overlay = new GuiOverlay(main_radar, "BOX_SELECTION", sf::Color(255, 255, 255, 32));
     box_selection_overlay->hide();
     
@@ -529,5 +537,46 @@ void GameMasterScreen::possess(P<CpuShip> target)
     main_radar->setTargetSpaceship(possession_target)->setRangeIndicatorStepSize(1000.0)->enableCallsigns()->setAutoCentering(true)->enableGhostDots()->enableWaypoints()->enableHeadingIndicators();
     if (main_radar->getDistance() > 10000){
         main_radar->setDistance(10000)->shortRange();
+    }
+}
+
+void GameMasterScreen::onJoystickX(float x_position)
+{
+    if(possession_target){
+        // float angle = possession_target->getRotation() + x_position;
+        // possession_target->commandTargetRotation(angle);
+    }
+}
+
+void GameMasterScreen::onJoystickY(float y_position)
+{
+    if(possession_target){
+        // if (fabs(y_position) > 20)   
+        // {
+        //     // Add some more hysteresis, since y-axis can be hard to keep at 0
+        //     float value;
+        //     if (y_position > 0)
+        //         value = (y_position-20) * 1.25 / 100;
+        //     else
+        //         value = (y_position+20) * 1.25 / 100;
+
+        //     possession_target->commandCombatManeuverBoost(-value);
+        // } else {
+        //     possession_target->commandCombatManeuverBoost(0.0);
+        // }
+    }
+}
+
+void GameMasterScreen::onJoystickZ(float z_position)
+{
+    if(possession_target){
+        // possession_target->commandImpulse(-(z_position / 100));  
+    }
+}
+
+void GameMasterScreen::onJoystickR(float r_position)
+{
+    if(possession_target){
+        // target_spaceship->commandCombatManeuverStrafe(r_position / 100);
     }
 }

@@ -6,7 +6,7 @@ GuiCanvas::GuiCanvas()
 {
     previous_joystick_z_position = 0;
     previous_joystick_r_position = 0;
-    enable_debug_rendering = false;
+    enable_debug_rendering = true;
 }
 
 GuiCanvas::~GuiCanvas()

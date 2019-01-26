@@ -192,6 +192,7 @@ public:
     void drawBeamOnRadar(sf::RenderTarget& window, sf::Vector2f position, float scale, 
         sf::Color color, sf::Vector2f beam_position, float beam_direction, float beam_arc, float beam_range);
     virtual void drawOnGMRadar(sf::RenderTarget& window, sf::Vector2f position, float scale, bool long_range) override;
+    void onReceiveClientCommand(int32_t client_id, sf::Packet& packet);
 
     virtual void update(float delta) override;
     virtual float getShieldRechargeRate(int shield_index) override;

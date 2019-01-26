@@ -9,6 +9,7 @@
 #include "spaceObjects/warpJammer.h"
 #include "gameGlobalInfo.h"
 #include "shipCargo.h"
+#include "scanProbe.h"
 
 #include "scriptInterface.h"
 
@@ -82,6 +83,59 @@ REGISTER_SCRIPT_SUBCLASS_NO_CREATE(SpaceShip, ShipTemplateBasedObject)
 
     REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, addBroadcast);
 }
+
+static const int16_t CMD_TARGET_ROTATION = 0x0001;
+static const int16_t CMD_IMPULSE = 0x0002;
+static const int16_t CMD_WARP = 0x0003;
+static const int16_t CMD_JUMP = 0x0004;
+static const int16_t CMD_SET_TARGET = 0x0005;
+static const int16_t CMD_LOAD_TUBE = 0x0006;
+static const int16_t CMD_UNLOAD_TUBE = 0x0007;
+static const int16_t CMD_FIRE_TUBE = 0x0008;
+// static const int16_t CMD_SET_SHIELDS = 0x0009;
+// static const int16_t CMD_SET_MAIN_SCREEN_SETTING = 0x000A; // Overlay is 0x0027
+// static const int16_t CMD_SCAN_OBJECT = 0x000B;
+// static const int16_t CMD_SCAN_DONE = 0x000C;
+// static const int16_t CMD_SCAN_CANCEL = 0x000D;
+// static const int16_t CMD_SET_SYSTEM_POWER_REQUEST = 0x000E;
+// static const int16_t CMD_SET_SYSTEM_COOLANT_REQUEST = 0x000F;
+static const int16_t CMD_DOCK = 0x0010;
+static const int16_t CMD_UNDOCK = 0x0011;
+// static const int16_t CMD_OPEN_TEXT_COMM = 0x0012; //TEXT communication
+// static const int16_t CMD_CLOSE_TEXT_COMM = 0x0013;
+// static const int16_t CMD_SEND_TEXT_COMM = 0x0014;
+// static const int16_t CMD_SEND_TEXT_COMM_PLAYER = 0x0015;
+// static const int16_t CMD_ANSWER_COMM_HAIL = 0x0016;
+// static const int16_t CMD_SET_AUTO_REPAIR = 0x0017;
+static const int16_t CMD_SET_BEAM_FREQUENCY = 0x0018;
+static const int16_t CMD_SET_BEAM_SYSTEM_TARGET = 0x0019;
+static const int16_t CMD_SET_SHIELD_FREQUENCY = 0x001A; // need player override
+// static const int16_t CMD_ADD_WAYPOINT = 0x001B;
+// static const int16_t CMD_REMOVE_WAYPOINT = 0x001C;
+// static const int16_t CMD_MOVE_WAYPOINT = 0x001D;
+// static const int16_t CMD_ACTIVATE_SELF_DESTRUCT = 0x001E;
+// static const int16_t CMD_CANCEL_SELF_DESTRUCT = 0x001F;
+// static const int16_t CMD_CONFIRM_SELF_DESTRUCT = 0x0020;
+static const int16_t CMD_COMBAT_MANEUVER_BOOST = 0x0021;
+static const int16_t CMD_COMBAT_MANEUVER_STRAFE = 0x0022;
+static const int16_t CMD_LAUNCH_PROBE = 0x0023; // need player override
+// static const int16_t CMD_SET_ALERT_LEVEL = 0x0024;
+// static const int16_t CMD_SET_SCIENCE_LINK = 0x0025;
+// static const int16_t CMD_SET_PROBE_3D_LINK = 0x0026;
+static const int16_t CMD_ABORT_DOCK = 0x0027;
+// static const int16_t CMD_SET_MAIN_SCREEN_OVERLAY = 0x0028;
+static const int16_t CMD_HACKING_FINISHED = 0x0029;
+// static const int16_t CMD_CUSTOM_FUNCTION = 0x002A;
+static const int16_t CMD_LAUNCH_CARGO = 0x002B;
+static const int16_t CMD_MOVE_CARGO = 0x002C;
+static const int16_t CMD_CANCEL_MOVE_CARGO = 0x002D;
+static const int16_t CMD_SET_DOCK_MOVE_TARGET = 0x002E;
+static const int16_t CMD_SET_DOCK_ENERGY_REQUEST = 0x002F;
+// static const int16_t CMD_SET_AUTO_REPAIR_SYSTEM_TARGET = 0x0030;
+static const int16_t CMD_SET_TRACTOR_BEAM_DIRECTION = 0x0031;
+static const int16_t CMD_SET_TRACTOR_BEAM_ARC = 0x0032;
+static const int16_t CMD_SET_TRACTOR_BEAM_RANGE = 0x0033;
+static const int16_t CMD_SET_TRACTOR_BEAM_MODE = 0x0034;
 
 SpaceShip::SpaceShip(string multiplayerClassName, float multiplayer_significant_range)
 : ShipTemplateBasedObject(50, multiplayerClassName, multiplayer_significant_range)
@@ -200,6 +254,252 @@ SpaceShip::SpaceShip(string multiplayerClassName, float multiplayer_significant_
 
     if (game_server)
         setCallSign(gameGlobalInfo->getNextShipCallsign());
+}
+
+void SpaceShip::onReceiveClientCommand(int32_t client_id, sf::Packet& packet)
+{
+    // Receive a command from a client. Code in this function is executed on
+    // the server only.
+    int16_t command;
+    packet >> command;
+
+    switch(command)
+    {
+    case CMD_TARGET_ROTATION:
+        packet >> target_rotation;
+        break;
+    case CMD_IMPULSE:
+        packet >> impulse_request;
+        break;
+    case CMD_WARP:
+        packet >> warp_request;
+        break;
+    case CMD_JUMP:
+        {
+            float distance;
+            packet >> distance;
+            initializeJump(distance);
+            // addToShipLog("Jump Initialisation",sf::Color::White,"intern");
+        }
+        break;
+    case CMD_SET_TARGET:
+        {
+            packet >> target_id;
+            if (target_id != int32_t(-1))
+            // addToShipLog("Target activated : " + string(SpaceShip::getTarget()->SpaceObject::getCallSign()),sf::Color::Yellow,"intern");
+        }
+        break;
+    case CMD_LOAD_TUBE:
+        {
+            int8_t tube_nr;
+            EMissileWeapons type;
+            packet >> tube_nr >> type;
+
+            if (tube_nr >= 0 && tube_nr < max_weapon_tubes)
+                weapon_tube[tube_nr].startLoad(type);
+        }
+        break;
+    case CMD_UNLOAD_TUBE:
+        {
+            int8_t tube_nr;
+            packet >> tube_nr;
+
+            if (tube_nr >= 0 && tube_nr < max_weapon_tubes)
+            {
+                weapon_tube[tube_nr].startUnload();
+            }
+        }
+        break;
+    case CMD_FIRE_TUBE:
+        {
+            int8_t tube_nr;
+            float missile_target_angle;
+            packet >> tube_nr >> missile_target_angle;
+
+            if (tube_nr >= 0 && tube_nr < max_weapon_tubes)
+            {
+                weapon_tube[tube_nr].fire(missile_target_angle);
+                // addToShipLog("Missile fire",sf::Color::Yellow,"intern");
+            }
+        }
+        break;
+    case CMD_DOCK:
+        {
+            int32_t id;
+            packet >> id;
+            requestDock(game_server->getObjectById(id));
+            // addToShipLog("Docking requested",sf::Color::Cyan,"intern");
+        }
+        break;
+    case CMD_UNDOCK:
+        {
+            requestUndock();
+            // addToShipLog("Undocking requested",sf::Color::Cyan,"intern");
+        }
+        break;
+    case CMD_ABORT_DOCK:
+        {
+            abortDock();
+            // addToShipLog("Docking aborded",sf::Color::Cyan,"intern");
+        }
+        break;
+    case CMD_SET_BEAM_FREQUENCY:
+        {
+            int32_t new_frequency;
+            packet >> new_frequency;
+            beam_frequency = new_frequency;
+            if (beam_frequency < 0)
+                beam_frequency = 0;
+            if (beam_frequency > SpaceShip::max_frequency)
+                beam_frequency = SpaceShip::max_frequency;
+            // addToShipLog("Beam frequency changed : " + frequencyToString(new_frequency),sf::Color::Yellow,"intern");
+        }
+        break;
+    case CMD_SET_BEAM_SYSTEM_TARGET:
+        {
+            ESystem system;
+            packet >> system;
+            beam_system_target = system;
+            if (beam_system_target < SYS_None)
+                beam_system_target = SYS_None;
+            if (beam_system_target > ESystem(int(SYS_COUNT) - 1))
+                beam_system_target = ESystem(int(SYS_COUNT) - 1);
+            // addToShipLog("Beam system target changed : " + getSystemName(system),sf::Color::Yellow,"intern");
+        }
+        break;
+    case CMD_SET_SHIELD_FREQUENCY:
+        int32_t new_frequency;
+        packet >> new_frequency;
+        if (new_frequency != shield_frequency)
+        {
+            shield_frequency = new_frequency;
+            if (shield_frequency < 0)
+                shield_frequency = 0;
+            if (shield_frequency > SpaceShip::max_frequency)
+                shield_frequency = SpaceShip::max_frequency;
+            // addToShipLog("Shields frequency changed : " + frequencyToString(new_frequency),sf::Color::Green,"intern");
+        }
+        break;
+    case CMD_COMBAT_MANEUVER_BOOST:
+        {
+            float request_amount;
+            packet >> request_amount;
+            if (request_amount >= 0.0 && request_amount <= 1.0)
+                combat_maneuver_boost_request = request_amount;
+        }
+        break;
+    case CMD_COMBAT_MANEUVER_STRAFE:
+        {
+            float request_amount;
+            packet >> request_amount;
+            if (request_amount >= -1.0 && request_amount <= 1.0)
+                combat_maneuver_strafe_request = request_amount;
+        }
+        break;
+    case CMD_LAUNCH_PROBE:
+        {
+            sf::Vector2f target;
+            packet >> target;
+            P<ScanProbe> p = new ScanProbe();
+            p->setPosition(getPosition());
+            p->setTarget(target);
+            p->setOwner(this);
+        }
+        break;
+    case CMD_LAUNCH_CARGO:
+        {
+            int dockIndex;
+            packet >> dockIndex;
+            if (docks[dockIndex].state == EDockState::Docked 
+                && docks[dockIndex].getCargo()->onLaunch(docks[dockIndex]))
+            {
+                docks[dockIndex].getCargo()->destroy();
+                docks[dockIndex].empty();
+            }
+        }
+        break;
+    case CMD_SET_DOCK_MOVE_TARGET:
+        {
+            int srcIdx, destIdx;
+            packet >> srcIdx >> destIdx;
+            Dock& src = docks[srcIdx];
+            src.setMoveTarget(destIdx);
+        }
+        break;
+        break;
+    case CMD_MOVE_CARGO:
+        {
+            int index;
+            packet >> index;
+            Dock& src = docks[index];
+            src.startMoveCargo();
+        }
+        break;
+    case CMD_CANCEL_MOVE_CARGO:
+        {
+            int index;
+            packet >> index;
+            Dock& src = docks[index];
+            src.cancelMoveCargo();
+        }
+        break;
+    case CMD_SET_DOCK_ENERGY_REQUEST:
+        {
+            int dockIndex;
+            packet >> dockIndex;
+            if (docks[dockIndex].state == EDockState::Docked && docks[dockIndex].dock_type == Dock_Energy)
+            {
+                float value;
+                packet >> value;
+                docks[dockIndex].energy_request = value;
+            }
+        }
+        break;
+    case CMD_HACKING_FINISHED:
+        {
+            uint32_t id;
+            string target_system;
+            packet >> id >> target_system;
+            P<SpaceObject> obj = game_server->getObjectById(id);
+            if (obj)
+                obj->hackFinished(this, target_system);
+        }
+        break;
+    case CMD_SET_TRACTOR_BEAM_DIRECTION:
+        {
+            float direction;
+            packet >> direction;
+            tractor_beam.setDirection(direction);
+        }
+        break;
+    case CMD_SET_TRACTOR_BEAM_ARC:
+        {
+            float arc;
+            packet >> arc;
+            if (tractor_beam.getMaxArea() > 0){
+                tractor_beam.setArc(arc);
+                tractor_beam.setRange(std::min(tractor_beam.getRange(), tractor_beam.getMaxRange(arc)));
+            }
+        }
+        break;
+    case CMD_SET_TRACTOR_BEAM_RANGE:
+        {
+            float range;
+            packet >> range;
+            if (tractor_beam.getMaxArea() > 0){
+                tractor_beam.setRange(range);
+                tractor_beam.setArc(std::min(tractor_beam.getArc(), tractor_beam.getMaxArc(range)));
+            }
+        }
+        break;
+    case CMD_SET_TRACTOR_BEAM_MODE:
+        {
+            int mode;
+            packet >> mode;
+            tractor_beam.setMode(ETractorBeamMode(mode));
+        }
+        break;
+    }
 }
 
 void SpaceShip::applyTemplateValues()

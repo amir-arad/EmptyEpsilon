@@ -82,6 +82,10 @@ public:
     void onMouseDown(sf::Vector2f position);
     void onMouseDrag(sf::Vector2f position);
     void onMouseUp(sf::Vector2f position);
+    void onJoystickX(float x_position);
+    void onJoystickY(float y_position);
+    void onJoystickZ(float z_position);
+    void onJoystickR(float r_position);
 
     virtual void onKey(sf::Event::KeyEvent key, int unicode);
     
