@@ -44,10 +44,6 @@ void ShipAI::drawOnGMRadar(sf::RenderTarget& window, sf::Vector2f draw_position,
 
 void ShipAI::run(float delta)
 {
-    owner->target_rotation = owner->getRotation();
-    owner->warp_request = 0.0;
-    owner->impulse_request = 0.0f;
-
     updateWeaponState(delta);
     if (update_target_delay > 0.0)
     {
@@ -57,12 +53,17 @@ void ShipAI::run(float delta)
         updateTarget();
     }
 
-    //If we have a target and weapons, engage the target.
-    if (owner->getTarget() && (has_missiles || has_beams))
-    {
-        runAttack(owner->getTarget());
-    }else{
-        runOrders();
+    if (!owner->possessed){
+        owner->target_rotation = owner->getRotation();
+        owner->warp_request = 0.0;
+        owner->impulse_request = 0.0f;
+        //If we have a target and weapons, engage the target.
+        if (owner->getTarget() && (has_missiles || has_beams))
+        {
+            runAttack(owner->getTarget());
+        }else{
+            runOrders();
+        }
     }
 }
 
