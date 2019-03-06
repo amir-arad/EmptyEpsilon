@@ -223,8 +223,8 @@ public:
     P<SpaceObject> docking_target; //Server only
     sf::Vector2f docking_offset; //Server only
 
-    uint extern_log_size;
-    uint intern_log_size;
+    uint8 extern_log_size;
+    uint8 intern_log_size;
     std::vector<ShipLogEntry> ships_log_extern;
     std::vector<ShipLogEntry> ships_log_intern;
     
