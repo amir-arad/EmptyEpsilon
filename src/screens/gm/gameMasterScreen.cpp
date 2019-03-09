@@ -175,7 +175,7 @@ GameMasterScreen::GameMasterScreen()
             }
         }
     });
-    player_comms_hail->setPosition(20, -170, ABottomLeft)->setSize(250, 50)->hide();
+    player_comms_hail->setPosition(20, -220, ABottomLeft)->setSize(250, 50)->hide();
 
     info_layout = new GuiAutoLayout(this, "INFO_LAYOUT", GuiAutoLayout::LayoutVerticalTopToBottom);
     info_layout->setPosition(-20, 20, ATopRight)->setSize(300, GuiElement::GuiSizeMax);
