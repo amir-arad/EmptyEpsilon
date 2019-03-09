@@ -541,25 +541,31 @@ void GameMasterScreen::possess(P<CpuShip> target)
     }
 }
 
+#define JOYSTICK_NOISE 5
+
 void GameMasterScreen::onJoystickX(float x_position)
 {
     if(possession_target){
-        float angle = possession_target->getRotation() + x_position;
-        possession_target->commandTargetRotation(angle);
+        if (fabs(x_position) > JOYSTICK_NOISE)   
+        {
+            possession_target->commandCombatManeuverStrafe(x_position / 100);
+         } else {
+            possession_target->commandCombatManeuverStrafe(0.0);
+        }
     }
 }
 
 void GameMasterScreen::onJoystickY(float y_position)
 {
     if(possession_target){
-        if (fabs(y_position) > 20)   
+        if (fabs(y_position) > JOYSTICK_NOISE)   
         {
             // Add some more hysteresis, since y-axis can be hard to keep at 0
             float value;
             if (y_position > 0)
-                value = (y_position-20) * 1.25 / 100;
+                value = (y_position-JOYSTICK_NOISE) * 1.25 / 100;
             else
-                value = (y_position+20) * 1.25 / 100;
+                value = (y_position+JOYSTICK_NOISE) * 1.25 / 100;
 
             possession_target->commandCombatManeuverBoost(-value);
         } else {
@@ -578,6 +584,8 @@ void GameMasterScreen::onJoystickZ(float z_position)
 void GameMasterScreen::onJoystickR(float r_position)
 {
     if(possession_target){
-        possession_target->commandCombatManeuverStrafe(r_position / 100);
+        float angle = possession_target->getRotation() + r_position;
+        possession_target->commandTargetRotation(angle);
+    
     }
 }

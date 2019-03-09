@@ -409,7 +409,7 @@ void SpaceShip::handleClientCommand(int32_t client_id, int16_t command, sf::Pack
         {
             float request_amount;
             packet >> request_amount;
-            combat_maneuver_boost_request = std::min(1.0f, std::max(0.0f, request_amount));
+            combat_maneuver_boost_request = std::min(1.0f, std::max(-1.0f, request_amount));
         }
         break;
     case CMD_COMBAT_MANEUVER_STRAFE:
