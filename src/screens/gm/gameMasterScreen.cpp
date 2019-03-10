@@ -489,7 +489,7 @@ void GameMasterScreen::handleJoystickAxis(unsigned int joystick, sf::Joystick::A
             possession_target->commandCombatManeuverBoost(-position / 100);
             break;
         case sf::Joystick::Z: 
-            possession_target->commandImpulse(position / 100);  
+            possession_target->commandImpulse(-position / 100);  
             break;
         case sf::Joystick::R: 
             possession_target->commandRotation(position / 100);
