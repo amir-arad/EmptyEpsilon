@@ -492,7 +492,7 @@ void GameMasterScreen::handleJoystickAxis(unsigned int joystick, sf::Joystick::A
             possession_target->commandImpulse(position / 100);  
             break;
         case sf::Joystick::R: 
-            possession_target->commandTargetRotation(possession_target->getRotation() + (180 * position / 100));
+            possession_target->commandRotation(position / 100);
             break;
         default:
             break;
@@ -563,7 +563,7 @@ void GameMasterScreen::possess(P<CpuShip> target)
    // main_radar->enableTargetProjections(tube_controls);
 
     main_radar->setTargetSpaceship(possession_target)->setRangeIndicatorStepSize(1000.0)->enableCallsigns()->setAutoCentering(true)->enableGhostDots()->enableWaypoints()->enableHeadingIndicators();
-    if (main_radar->getDistance() > 10000){
-        main_radar->setDistance(10000)->shortRange();
+    if (main_radar->getDistance() >= 10000){
+        main_radar->setDistance(10000 - 1)->shortRange();
     }
 }
