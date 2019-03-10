@@ -29,6 +29,7 @@ private:
     TargetsContainer targets;
     P<SpaceObject> target;
     P<CpuShip> possession_target;
+    int8_t selected_posessed_tube;
     GuiRadarView* main_radar;
     GuiOverlay* box_selection_overlay;
     GuiSelector* faction_selector;

@@ -20,7 +20,6 @@
 #include "gui/gui2_label.h"
 #include "gui/gui2_keyvaluedisplay.h"
 #include "gui/gui2_textentry.h"
-
 #include "screenComponents/missileTubeControls.h"
 
 GameMasterScreen::GameMasterScreen()
@@ -222,6 +221,7 @@ GameMasterScreen::GameMasterScreen()
         object_creation_view->hide();
     });
     object_creation_view->hide();
+    selected_posessed_tube = 0;
 }
 
 void GameMasterScreen::update(float delta)
@@ -293,7 +293,7 @@ void GameMasterScreen::update(float delta)
     gm_script_options->setVisible(!has_cpu_ship);
     player_comms_hail->setVisible(has_player_ship);
     
-    std::unordered_map<string, string> selection_info;
+    std::map<string, string> selection_info;
 
     // For each selected object, determine and report their type.
     for(P<SpaceObject> obj : targets.getTargets())
@@ -319,11 +319,30 @@ void GameMasterScreen::update(float delta)
         P<SpaceShip> targetSpaceship = P<SpaceShip>(target);
         if (targetSpaceship){
             selection_info["Max Warp"] = string(targetSpaceship->max_warp, 2);
+            for(int8_t n=0; n < targetSpaceship->weapon_tube_count; n++)
+            {
+                WeaponTube& tube = targetSpaceship->weapon_tube[n];
+                string name = string("tube ") + string(n) + " " + targetSpaceship->weapon_tube[n].getTubeName();
+                if(possession_target && possession_target == targetSpaceship && selected_posessed_tube == n){
+                    name += "<!>";    
+                }
+                if(tube.isEmpty()) {
+                    selection_info[name] = "Empty";
+                } else if(tube.isLoaded()) {
+                    selection_info[name] = getMissileWeaponName(tube.getLoadType()) +  string(" Loaded");
+                } else if(tube.isLoading()) {
+                    selection_info[name] = string("Loading ") + getMissileWeaponName(tube.getLoadType()) + " " + string(tube.getLoadProgress());
+                } else if(tube.isUnloading()) {
+                    selection_info[name] = string("Unloading ") + getMissileWeaponName(tube.getLoadType())+ " " + string(tube.getUnloadProgress());
+                } else if(tube.isFiring()) {
+                    selection_info[name] = string("firing ") + getMissileWeaponName(tube.getLoadType());
+                }
+            }
         }
     }
     
     unsigned int cnt = 0;
-    for(std::unordered_map<string, string>::iterator i = selection_info.begin(); i != selection_info.end(); i++)
+    for(std::map<string, string>::iterator i = selection_info.begin(); i != selection_info.end(); i++)
     {
         if (cnt == info_items.size())
         {
@@ -502,9 +521,18 @@ void GameMasterScreen::handleJoystickAxis(unsigned int joystick, sf::Joystick::A
 
 void GameMasterScreen::handleJoystickButton(unsigned int joystick, unsigned int button, bool state)
 {
-    if(possession_target){
+    if(state && possession_target){
         switch(button) 
         {
+        case 0:
+            possession_target->commandFireTubeAtTarget(selected_posessed_tube, possession_target->getTarget());
+            break;
+        case 4 : 
+            selected_posessed_tube = (selected_posessed_tube + possession_target->weapon_tube_count - 1) % possession_target->weapon_tube_count;
+            break;
+        case 6 : 
+            selected_posessed_tube = (selected_posessed_tube + 1) % possession_target->weapon_tube_count;
+            break;
         default:
             break;
         }
@@ -558,10 +586,9 @@ void GameMasterScreen::possess(P<CpuShip> target)
     if(possession_target){
         gameMasterActions->commandSetPosessed(possession_target, true);
     }
-    // GuiMissileTubeControls *tube_controls = new GuiMissileTubeControls(this, "MISSILE_TUBES", possession_target);
-    // tube_controls->setPosition(20, -20, ABottomLeft);
-   // main_radar->enableTargetProjections(tube_controls);
-
+    if (selected_posessed_tube >= possession_target->weapon_tube_count){
+        selected_posessed_tube = 0;
+    }
     main_radar->setTargetSpaceship(possession_target)->setRangeIndicatorStepSize(1000.0)->enableCallsigns()->setAutoCentering(true)->enableGhostDots()->enableWaypoints()->enableHeadingIndicators();
     if (main_radar->getDistance() >= 10000){
         main_radar->setDistance(10000 - 1)->shortRange();
