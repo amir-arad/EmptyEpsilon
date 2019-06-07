@@ -11,9 +11,6 @@
 // PlayerSpaceship are ships controlled by a player crew.
 REGISTER_SCRIPT_SUBCLASS(PlayerSpaceship, SpaceShip)
 {
-    // Returns the sf::Vector2f of a specific waypoint set by this ship.
-    // Takes the index of the waypoint as its parameter.
-    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getWaypoint);
     // Returns the total number of this ship's active waypoints.
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getWaypointCount);
     // Returns the ship's EAlertLevel.
@@ -21,9 +18,6 @@ REGISTER_SCRIPT_SUBCLASS(PlayerSpaceship, SpaceShip)
     // Sets whether this ship's shields are raised or lowered.
     // Takes a Boolean value.
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setShieldsActive);
-    // Adds a message to the ship's log. Takes a string as the message and a
-    // sf::Color.
-    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, addToShipLog);
     // Move all players connected to this ship to the same stations on a
     // different PlayerSpaceship. If the target isn't a PlayerSpaceship, this
     // function does nothing.
@@ -65,24 +59,12 @@ REGISTER_SCRIPT_SUBCLASS(PlayerSpaceship, SpaceShip)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, removeCustom);
 
     // Command functions
-    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandTargetRotation);
-    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandImpulse);
-    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandWarp);
-    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandJump);
-    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetTarget);
-    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandLoadTube);
-    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandUnloadTube);
-    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandFireTube);
-    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandFireTubeAtTarget);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetShields);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandMainScreenSetting);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandMainScreenOverlay);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandScan);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetSystemPowerRequest);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetSystemCoolantRequest);
-    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandDock);
-    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandUndock);
-    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandAbortDock);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandOpenTextComm);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandCloseTextComm);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandAnswerCommHail);
@@ -92,8 +74,6 @@ REGISTER_SCRIPT_SUBCLASS(PlayerSpaceship, SpaceShip)
     // Use this command on ships to require less player interaction, especially
     // when combined with setAutoCoolant/auto_coolant_enabled.
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetAutoRepair);
-    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetBeamFrequency);
-    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetBeamSystemTarget);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetShieldFrequency);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandAddWaypoint);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandRemoveWaypoint);
@@ -101,7 +81,6 @@ REGISTER_SCRIPT_SUBCLASS(PlayerSpaceship, SpaceShip)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandActivateSelfDestruct);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandCancelSelfDestruct);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandConfirmDestructCode);
-    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandCombatManeuverBoost);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetScienceLink);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetAlertLevel);
 
@@ -132,48 +111,6 @@ float PlayerSpaceship::system_power_user_factor[] = {
     /*SYS_RearShield*/    5.0 * 0.08,
 };
 
-static const int16_t CMD_TARGET_ROTATION = 0x0001;
-static const int16_t CMD_IMPULSE = 0x0002;
-static const int16_t CMD_WARP = 0x0003;
-static const int16_t CMD_JUMP = 0x0004;
-static const int16_t CMD_SET_TARGET = 0x0005;
-static const int16_t CMD_LOAD_TUBE = 0x0006;
-static const int16_t CMD_UNLOAD_TUBE = 0x0007;
-static const int16_t CMD_FIRE_TUBE = 0x0008;
-static const int16_t CMD_SET_SHIELDS = 0x0009;
-static const int16_t CMD_SET_MAIN_SCREEN_SETTING = 0x000A; // Overlay is 0x0027
-static const int16_t CMD_SCAN_OBJECT = 0x000B;
-static const int16_t CMD_SCAN_DONE = 0x000C;
-static const int16_t CMD_SCAN_CANCEL = 0x000D;
-static const int16_t CMD_SET_SYSTEM_POWER_REQUEST = 0x000E;
-static const int16_t CMD_SET_SYSTEM_COOLANT_REQUEST = 0x000F;
-static const int16_t CMD_DOCK = 0x0010;
-static const int16_t CMD_UNDOCK = 0x0011;
-static const int16_t CMD_OPEN_TEXT_COMM = 0x0012; //TEXT communication
-static const int16_t CMD_CLOSE_TEXT_COMM = 0x0013;
-static const int16_t CMD_SEND_TEXT_COMM = 0x0014;
-static const int16_t CMD_SEND_TEXT_COMM_PLAYER = 0x0015;
-static const int16_t CMD_ANSWER_COMM_HAIL = 0x0016;
-static const int16_t CMD_SET_AUTO_REPAIR = 0x0017;
-static const int16_t CMD_SET_BEAM_FREQUENCY = 0x0018;
-static const int16_t CMD_SET_BEAM_SYSTEM_TARGET = 0x0019;
-static const int16_t CMD_SET_SHIELD_FREQUENCY = 0x001A;
-static const int16_t CMD_ADD_WAYPOINT = 0x001B;
-static const int16_t CMD_REMOVE_WAYPOINT = 0x001C;
-static const int16_t CMD_MOVE_WAYPOINT = 0x001D;
-static const int16_t CMD_ACTIVATE_SELF_DESTRUCT = 0x001E;
-static const int16_t CMD_CANCEL_SELF_DESTRUCT = 0x001F;
-static const int16_t CMD_CONFIRM_SELF_DESTRUCT = 0x0020;
-static const int16_t CMD_COMBAT_MANEUVER_BOOST = 0x0021;
-static const int16_t CMD_COMBAT_MANEUVER_STRAFE = 0x0022;
-static const int16_t CMD_LAUNCH_PROBE = 0x0023;
-static const int16_t CMD_SET_ALERT_LEVEL = 0x0024;
-static const int16_t CMD_SET_SCIENCE_LINK = 0x0025;
-static const int16_t CMD_ABORT_DOCK = 0x0026;
-static const int16_t CMD_SET_MAIN_SCREEN_OVERLAY = 0x0027;
-static const int16_t CMD_HACKING_FINISHED = 0x0028;
-static const int16_t CMD_CUSTOM_FUNCTION = 0x0029;
-
 string alertLevelToString(EAlertLevel level)
 {
     // Convert an EAlertLevel to a string.
@@ -186,10 +123,6 @@ string alertLevelToString(EAlertLevel level)
         return "???";
     }
 }
-
-// Configure ship's log packets.
-static inline sf::Packet& operator << (sf::Packet& packet, const PlayerSpaceship::ShipLogEntry& e) { return packet << e.prefix << e.text << e.color.r << e.color.g << e.color.b << e.color.a; }
-static inline sf::Packet& operator >> (sf::Packet& packet, PlayerSpaceship::ShipLogEntry& e) { packet >> e.prefix >> e.text >> e.color.r >> e.color.g >> e.color.b >> e.color.a; return packet; }
 
 REGISTER_MULTIPLAYER_CLASS(PlayerSpaceship, "PlayerSpaceship");
 PlayerSpaceship::PlayerSpaceship()
@@ -243,7 +176,6 @@ PlayerSpaceship::PlayerSpaceship()
     registerMemberReplication(&comms_reply_message);
     registerMemberReplication(&comms_target_name);
     registerMemberReplication(&comms_incomming_message);
-    registerMemberReplication(&ships_log);
     registerMemberReplication(&waypoints);
     registerMemberReplication(&scan_probe_stock);
     registerMemberReplication(&activate_self_destruct);
@@ -781,37 +713,6 @@ void PlayerSpaceship::setRepairCrewCount(int amount)
     }
 }
 
-void PlayerSpaceship::addToShipLog(string message, sf::Color color)
-{
-    // Cap the ship's log size to 100 entries. If it exceeds that limit,
-    // start erasing entries from the beginning.
-    if (ships_log.size() > 100)
-        ships_log.erase(ships_log.begin());
-
-    // Timestamp a log entry, color it, and add it to the end of the log.
-    ships_log.emplace_back(string(engine->getElapsedTime(), 1) + string(": "), message, color);
-}
-
-void PlayerSpaceship::addToShipLogBy(string message, P<SpaceObject> target)
-{
-    // Log messages received from other ships. Friend-or-foe colors are drawn
-    // from colorConfig (colors.ini).
-    if (!target)
-        addToShipLog(message, colorConfig.log_receive_neutral);
-    else if (isFriendly(target))
-        addToShipLog(message, colorConfig.log_receive_friendly);
-    else if (isEnemy(target))
-        addToShipLog(message, colorConfig.log_receive_enemy);
-    else
-        addToShipLog(message, colorConfig.log_receive_neutral);
-}
-
-const std::vector<PlayerSpaceship::ShipLogEntry>& PlayerSpaceship::getShipsLog() const
-{
-    // Return the ship's log.
-    return ships_log;
-}
-
 void PlayerSpaceship::transferPlayersToShip(P<PlayerSpaceship> other_ship)
 {
     // Don't do anything without a valid target. The target must be a
@@ -1030,67 +931,10 @@ void PlayerSpaceship::closeComms()
     }
 }
 
-void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sf::Packet& packet)
+void PlayerSpaceship::handleClientCommand(int32_t client_id, int16_t command, sf::Packet& packet)
 {
-    // Receive a command from a client. Code in this function is executed on
-    // the server only.
-    int16_t command;
-    packet >> command;
-
     switch(command)
     {
-    case CMD_TARGET_ROTATION:
-        packet >> target_rotation;
-        break;
-    case CMD_IMPULSE:
-        packet >> impulse_request;
-        break;
-    case CMD_WARP:
-        packet >> warp_request;
-        break;
-    case CMD_JUMP:
-        {
-            float distance;
-            packet >> distance;
-            initializeJump(distance);
-        }
-        break;
-    case CMD_SET_TARGET:
-        {
-            packet >> target_id;
-        }
-        break;
-    case CMD_LOAD_TUBE:
-        {
-            int8_t tube_nr;
-            EMissileWeapons type;
-            packet >> tube_nr >> type;
-
-            if (tube_nr >= 0 && tube_nr < max_weapon_tubes)
-                weapon_tube[tube_nr].startLoad(type);
-        }
-        break;
-    case CMD_UNLOAD_TUBE:
-        {
-            int8_t tube_nr;
-            packet >> tube_nr;
-
-            if (tube_nr >= 0 && tube_nr < max_weapon_tubes)
-            {
-                weapon_tube[tube_nr].startUnload();
-            }
-        }
-        break;
-    case CMD_FIRE_TUBE:
-        {
-            int8_t tube_nr;
-            float missile_target_angle;
-            packet >> tube_nr >> missile_target_angle;
-
-            if (tube_nr >= 0 && tube_nr < max_weapon_tubes)
-                weapon_tube[tube_nr].fire(missile_target_angle);
-        }
-        break;
     case CMD_SET_SHIELDS:
         {
             bool active;
@@ -1161,19 +1005,6 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sf::Packet& pack
             if (system < SYS_COUNT && request >= 0.0 && request <= 10.0)
                 setSystemCoolantRequest(system, request);
         }
-        break;
-    case CMD_DOCK:
-        {
-            int32_t id;
-            packet >> id;
-            requestDock(game_server->getObjectById(id));
-        }
-        break;
-    case CMD_UNDOCK:
-        requestUndock();
-        break;
-    case CMD_ABORT_DOCK:
-        abortDock();
         break;
     case CMD_OPEN_TEXT_COMM:
         if (comms_state == CS_Inactive || comms_state == CS_BeingHailed || comms_state == CS_BeingHailedByGM || comms_state == CS_ChannelClosed)
@@ -1303,28 +1134,6 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sf::Packet& pack
     case CMD_SET_AUTO_REPAIR:
         packet >> auto_repair_enabled;
         break;
-    case CMD_SET_BEAM_FREQUENCY:
-        {
-            int32_t new_frequency;
-            packet >> new_frequency;
-            beam_frequency = new_frequency;
-            if (beam_frequency < 0)
-                beam_frequency = 0;
-            if (beam_frequency > SpaceShip::max_frequency)
-                beam_frequency = SpaceShip::max_frequency;
-        }
-        break;
-    case CMD_SET_BEAM_SYSTEM_TARGET:
-        {
-            ESystem system;
-            packet >> system;
-            beam_system_target = system;
-            if (beam_system_target < SYS_None)
-                beam_system_target = SYS_None;
-            if (beam_system_target > ESystem(int(SYS_COUNT) - 1))
-                beam_system_target = ESystem(int(SYS_COUNT) - 1);
-        }
-        break;
     case CMD_SET_SHIELD_FREQUENCY:
         if (shield_calibration_delay <= 0.0)
         {
@@ -1408,22 +1217,6 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sf::Packet& pack
                 self_destruct_code_confirmed[index] = true;
         }
         break;
-    case CMD_COMBAT_MANEUVER_BOOST:
-        {
-            float request_amount;
-            packet >> request_amount;
-            if (request_amount >= 0.0 && request_amount <= 1.0)
-                combat_maneuver_boost_request = request_amount;
-        }
-        break;
-    case CMD_COMBAT_MANEUVER_STRAFE:
-        {
-            float request_amount;
-            packet >> request_amount;
-            if (request_amount >= -1.0 && request_amount <= 1.0)
-                combat_maneuver_strafe_request = request_amount;
-        }
-        break;
     case CMD_LAUNCH_PROBE:
         if (scan_probe_stock > 0)
         {
@@ -1444,16 +1237,6 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sf::Packet& pack
     case CMD_SET_SCIENCE_LINK:
         {
             packet >> linked_science_probe_id;
-        }
-        break;
-    case CMD_HACKING_FINISHED:
-        {
-            uint32_t id;
-            string target_system;
-            packet >> id >> target_system;
-            P<SpaceObject> obj = game_server->getObjectById(id);
-            if (obj)
-                obj->hackFinished(this, target_system);
         }
         break;
     case CMD_CUSTOM_FUNCTION:
@@ -1477,84 +1260,12 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sf::Packet& pack
             }
         }
         break;
+    default:
+        SpaceShip::handleClientCommand(client_id, command, packet);
     }
 }
 
 // Client-side functions to send a command to the server.
-void PlayerSpaceship::commandTargetRotation(float target)
-{
-    sf::Packet packet;
-    packet << CMD_TARGET_ROTATION << target;
-    sendClientCommand(packet);
-}
-
-void PlayerSpaceship::commandImpulse(float target)
-{
-    sf::Packet packet;
-    packet << CMD_IMPULSE << target;
-    sendClientCommand(packet);
-}
-
-void PlayerSpaceship::commandWarp(int8_t target)
-{
-    sf::Packet packet;
-    packet << CMD_WARP << target;
-    sendClientCommand(packet);
-}
-
-void PlayerSpaceship::commandJump(float distance)
-{
-    sf::Packet packet;
-    packet << CMD_JUMP << distance;
-    sendClientCommand(packet);
-}
-
-void PlayerSpaceship::commandSetTarget(P<SpaceObject> target)
-{
-    sf::Packet packet;
-    if (target)
-        packet << CMD_SET_TARGET << target->getMultiplayerId();
-    else
-        packet << CMD_SET_TARGET << int32_t(-1);
-    sendClientCommand(packet);
-}
-
-void PlayerSpaceship::commandLoadTube(int8_t tubeNumber, EMissileWeapons missileType)
-{
-    sf::Packet packet;
-    packet << CMD_LOAD_TUBE << tubeNumber << missileType;
-    sendClientCommand(packet);
-}
-
-void PlayerSpaceship::commandUnloadTube(int8_t tubeNumber)
-{
-    sf::Packet packet;
-    packet << CMD_UNLOAD_TUBE << tubeNumber;
-    sendClientCommand(packet);
-}
-
-void PlayerSpaceship::commandFireTube(int8_t tubeNumber, float missile_target_angle)
-{
-    sf::Packet packet;
-    packet << CMD_FIRE_TUBE << tubeNumber << missile_target_angle;
-    sendClientCommand(packet);
-}
-
-void PlayerSpaceship::commandFireTubeAtTarget(int8_t tubeNumber, P<SpaceObject> target)
-{
-  float targetAngle = 0.0;
-  
-  if (!target || tubeNumber < 0 || tubeNumber >= getWeaponTubeCount())
-    return;
-  
-  targetAngle = weapon_tube[tubeNumber].calculateFiringSolution(target);
-  
-  if (targetAngle == std::numeric_limits<float>::infinity())
-      targetAngle = getRotation() + weapon_tube[tubeNumber].getDirection();
-    
-  commandFireTube(tubeNumber, targetAngle);
-}
-
 void PlayerSpaceship::commandSetShields(bool enabled)
 {
     sf::Packet packet;
@@ -1599,28 +1310,6 @@ void PlayerSpaceship::commandSetSystemCoolantRequest(ESystem system, float coola
     sendClientCommand(packet);
 }
 
-void PlayerSpaceship::commandDock(P<SpaceObject> object)
-{
-    if (!object) return;
-    sf::Packet packet;
-    packet << CMD_DOCK << object->getMultiplayerId();
-    sendClientCommand(packet);
-}
-
-void PlayerSpaceship::commandUndock()
-{
-    sf::Packet packet;
-    packet << CMD_UNDOCK;
-    sendClientCommand(packet);
-}
-
-void PlayerSpaceship::commandAbortDock()
-{
-    sf::Packet packet;
-    packet << CMD_ABORT_DOCK;
-    sendClientCommand(packet);
-}
-
 void PlayerSpaceship::commandOpenTextComm(P<SpaceObject> obj)
 {
     if (!obj) return;
@@ -1661,20 +1350,6 @@ void PlayerSpaceship::commandSetAutoRepair(bool enabled)
 {
     sf::Packet packet;
     packet << CMD_SET_AUTO_REPAIR << enabled;
-    sendClientCommand(packet);
-}
-
-void PlayerSpaceship::commandSetBeamFrequency(int32_t frequency)
-{
-    sf::Packet packet;
-    packet << CMD_SET_BEAM_FREQUENCY << frequency;
-    sendClientCommand(packet);
-}
-
-void PlayerSpaceship::commandSetBeamSystemTarget(ESystem system)
-{
-    sf::Packet packet;
-    packet << CMD_SET_BEAM_SYSTEM_TARGET << system;
     sendClientCommand(packet);
 }
 
@@ -1727,22 +1402,6 @@ void PlayerSpaceship::commandConfirmDestructCode(int8_t index, uint32_t code)
     sendClientCommand(packet);
 }
 
-void PlayerSpaceship::commandCombatManeuverBoost(float amount)
-{
-    combat_maneuver_boost_request = amount;
-    sf::Packet packet;
-    packet << CMD_COMBAT_MANEUVER_BOOST << amount;
-    sendClientCommand(packet);
-}
-
-void PlayerSpaceship::commandCombatManeuverStrafe(float amount)
-{
-    combat_maneuver_strafe_request = amount;
-    sf::Packet packet;
-    packet << CMD_COMBAT_MANEUVER_STRAFE << amount;
-    sendClientCommand(packet);
-}
-
 void PlayerSpaceship::commandLaunchProbe(sf::Vector2f target_position)
 {
     sf::Packet packet;
@@ -1769,15 +1428,6 @@ void PlayerSpaceship::commandSetAlertLevel(EAlertLevel level)
     sf::Packet packet;
     packet << CMD_SET_ALERT_LEVEL;
     packet << level;
-    sendClientCommand(packet);
-}
-
-void PlayerSpaceship::commandHackingFinished(P<SpaceObject> target, string target_system)
-{
-    sf::Packet packet;
-    packet << CMD_HACKING_FINISHED;
-    packet << target->getMultiplayerId();
-    packet << target_system;
     sendClientCommand(packet);
 }
 

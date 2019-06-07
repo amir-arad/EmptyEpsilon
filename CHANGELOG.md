@@ -4,6 +4,7 @@
 
 - multiple GM stations
 - GM can control factions status
+- GM can posess CPU ships
 
 ## [2018-02-15]
 

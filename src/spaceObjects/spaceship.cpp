@@ -8,6 +8,8 @@
 #include "particleEffect.h"
 #include "spaceObjects/warpJammer.h"
 #include "gameGlobalInfo.h"
+#include "scanProbe.h"
+#include "gui/colorConfig.h"
 
 #include "scriptInterface.h"
 REGISTER_SCRIPT_SUBCLASS_NO_CREATE(SpaceShip, ShipTemplateBasedObject)
@@ -77,7 +79,32 @@ REGISTER_SCRIPT_SUBCLASS_NO_CREATE(SpaceShip, ShipTemplateBasedObject)
     REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, setRadarTrace);
 
     REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, addBroadcast);
+    // Adds a message to the ship's log. Takes a string as the message and a
+    // sf::Color.
+    REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, addToShipLog);
+
+    // Command functions
+    REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, commandTargetRotation);
+    REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, commandImpulse);
+    REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, commandWarp);
+    REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, commandJump);
+    REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, commandSetTarget);
+    REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, commandLoadTube);
+    REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, commandUnloadTube);
+    REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, commandFireTube);
+    REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, commandFireTubeAtTarget);
+    REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, commandDock);
+    REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, commandUndock);
+    REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, commandAbortDock);
+    REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, commandSetBeamFrequency);
+    REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, commandSetBeamSystemTarget);
+    REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, commandSetShieldFrequency);
+    REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, commandCombatManeuverBoost);
 }
+
+// Configure ship's log packets.
+static inline sf::Packet& operator << (sf::Packet& packet, const PlayerSpaceship::ShipLogEntry& e) { return packet << e.prefix << e.text << e.color.r << e.color.g << e.color.b << e.color.a; }
+static inline sf::Packet& operator >> (sf::Packet& packet, PlayerSpaceship::ShipLogEntry& e) { packet >> e.prefix >> e.text >> e.color.r >> e.color.g >> e.color.b >> e.color.a; return packet; }
 
 SpaceShip::SpaceShip(string multiplayerClassName, float multiplayer_significant_range)
 : ShipTemplateBasedObject(50, multiplayerClassName, multiplayer_significant_range)
@@ -118,6 +145,7 @@ SpaceShip::SpaceShip(string multiplayerClassName, float multiplayer_significant_
     max_energy_level = 1000;
 
     registerMemberReplication(&target_rotation, 1.5);
+    registerMemberReplication(&rotation, 0.1);
     registerMemberReplication(&impulse_request, 0.1);
     registerMemberReplication(&current_impulse, 0.5);
     registerMemberReplication(&has_warp_drive);
@@ -146,6 +174,7 @@ SpaceShip::SpaceShip(string multiplayerClassName, float multiplayer_significant_
     registerMemberReplication(&combat_maneuver_boost_speed);
     registerMemberReplication(&combat_maneuver_strafe_speed);
     registerMemberReplication(&radar_trace);
+    registerMemberReplication(&ships_log);
 
     for(int n=0; n<SYS_COUNT; n++)
     {
@@ -187,6 +216,209 @@ SpaceShip::SpaceShip(string multiplayerClassName, float multiplayer_significant_
 
     if (game_server)
         setCallSign(gameGlobalInfo->getNextShipCallsign());
+    
+    rotation = 0.0f;
+}
+
+void SpaceShip::addToShipLog(string message, sf::Color color)
+{
+    // Cap the ship's log size to 100 entries. If it exceeds that limit,
+    // start erasing entries from the beginning.
+    if (ships_log.size() > 100)
+        ships_log.erase(ships_log.begin());
+
+    // Timestamp a log entry, color it, and add it to the end of the log.
+    ships_log.emplace_back(string(engine->getElapsedTime(), 1) + string(": "), message, color);
+}
+
+void SpaceShip::addToShipLogBy(string message, P<SpaceObject> target)
+{
+    // Log messages received from other ships. Friend-or-foe colors are drawn
+    // from colorConfig (colors.ini).
+    if (!target)
+        addToShipLog(message, colorConfig.log_receive_neutral);
+    else if (isFriendly(target))
+        addToShipLog(message, colorConfig.log_receive_friendly);
+    else if (isEnemy(target))
+        addToShipLog(message, colorConfig.log_receive_enemy);
+    else
+        addToShipLog(message, colorConfig.log_receive_neutral);
+}
+
+const std::vector<SpaceShip::ShipLogEntry>& SpaceShip::getShipsLog() const
+{
+    // Return the ship's log.
+    return ships_log;
+}
+
+void SpaceShip::handleClientCommand(int32_t client_id, int16_t command, sf::Packet& packet)
+{
+  switch(command)
+    {
+    case CMD_TARGET_ROTATION:
+        packet >> target_rotation;
+        break;
+    case CMD_ROTATION:
+        target_rotation = getRotation();
+        packet >> rotation;
+        break;
+    case CMD_IMPULSE:
+        packet >> impulse_request;
+        break;
+    case CMD_WARP:
+        packet >> warp_request;
+        break;
+    case CMD_JUMP:
+        {
+            float distance;
+            packet >> distance;
+            initializeJump(distance);
+            addToShipLog("Jump Initialisation",sf::Color::White);
+        }
+        break;
+    case CMD_SET_TARGET:
+        {
+            packet >> target_id;
+            if (target_id != int32_t(-1))
+                addToShipLog("Target activated : " + getTarget()->getCallSign(),sf::Color::Yellow);
+        }
+        break;
+    case CMD_LOAD_TUBE:
+        {
+            int8_t tube_nr;
+            EMissileWeapons type;
+            packet >> tube_nr >> type;
+
+            if (tube_nr >= 0 && tube_nr < max_weapon_tubes)
+                weapon_tube[tube_nr].startLoad(type);
+        }
+        break;
+    case CMD_UNLOAD_TUBE:
+        {
+            int8_t tube_nr;
+            packet >> tube_nr;
+
+            if (tube_nr >= 0 && tube_nr < max_weapon_tubes)
+            {
+                weapon_tube[tube_nr].startUnload();
+            }
+        }
+        break;
+    case CMD_FIRE_TUBE:
+        {
+            int8_t tube_nr;
+            float missile_target_angle;
+            packet >> tube_nr >> missile_target_angle;
+
+            if (tube_nr >= 0 && tube_nr < max_weapon_tubes)
+            {
+                weapon_tube[tube_nr].fire(missile_target_angle);
+                addToShipLog("Missile fire",sf::Color::Yellow);
+            }
+        }
+        break;
+    case CMD_DOCK:
+        {
+            int32_t id;
+            packet >> id;
+            requestDock(game_server->getObjectById(id));
+            addToShipLog("Docking requested",sf::Color::Cyan);
+        }
+        break;
+    case CMD_UNDOCK:
+        {
+            requestUndock();
+            addToShipLog("Undocking requested",sf::Color::Cyan);
+        }
+        break;
+    case CMD_ABORT_DOCK:
+        {
+            abortDock();
+            addToShipLog("Docking aborded",sf::Color::Cyan);
+        }
+        break;
+    case CMD_SET_BEAM_FREQUENCY:
+        {
+            int32_t new_frequency;
+            packet >> new_frequency;
+            beam_frequency = new_frequency;
+            if (beam_frequency < 0)
+                beam_frequency = 0;
+            if (beam_frequency > SpaceShip::max_frequency)
+                beam_frequency = SpaceShip::max_frequency;
+            addToShipLog("Beam frequency changed : " + frequencyToString(new_frequency),sf::Color::Yellow);
+        }
+        break;
+    case CMD_SET_BEAM_SYSTEM_TARGET:
+        {
+            ESystem system;
+            packet >> system;
+            beam_system_target = system;
+            if (beam_system_target < SYS_None)
+                beam_system_target = SYS_None;
+            if (beam_system_target > ESystem(int(SYS_COUNT) - 1))
+                beam_system_target = ESystem(int(SYS_COUNT) - 1);
+            addToShipLog("Beam system target changed : " + getSystemName(system),sf::Color::Yellow);
+        }
+        break;
+    case CMD_SET_SHIELD_FREQUENCY:
+        int32_t new_frequency;
+        packet >> new_frequency;
+        if (new_frequency != shield_frequency)
+        {
+            shield_frequency = new_frequency;
+            if (shield_frequency < 0)
+                shield_frequency = 0;
+            if (shield_frequency > SpaceShip::max_frequency)
+                shield_frequency = SpaceShip::max_frequency;
+            addToShipLog("Shields frequency changed : " + frequencyToString(new_frequency),sf::Color::Green);
+        }
+        break;
+    case CMD_COMBAT_MANEUVER_BOOST:
+        {
+            float request_amount;
+            packet >> request_amount;
+            combat_maneuver_boost_request = std::min(1.0f, std::max(-1.0f, request_amount));
+        }
+        break;
+    case CMD_COMBAT_MANEUVER_STRAFE:
+        {
+            float request_amount;
+            packet >> request_amount;
+            combat_maneuver_strafe_request = std::min(1.0f, std::max(-1.0f, request_amount));
+        }
+        break;
+    case CMD_LAUNCH_PROBE:
+        {
+            sf::Vector2f target;
+            packet >> target;
+            P<ScanProbe> p = new ScanProbe();
+            p->setPosition(getPosition());
+            p->setTarget(target);
+            p->setOwner(this);
+        }
+        break;
+    case CMD_HACKING_FINISHED:
+        {
+            uint32_t id;
+            string target_system;
+            packet >> id >> target_system;
+            P<SpaceObject> obj = game_server->getObjectById(id);
+            if (obj)
+                obj->hackFinished(this, target_system);
+        }
+        break;
+    }
+}
+
+
+void SpaceShip::onReceiveClientCommand(int32_t client_id, sf::Packet& packet)
+{
+    // Receive a command from a client. Code in this function is executed on
+    // the server only.
+    int16_t command;
+    packet >> command;
+    handleClientCommand(client_id, command, packet);
 }
 
 void SpaceShip::applyTemplateValues()
@@ -466,7 +698,12 @@ void SpaceShip::update(float delta)
             warp_request = 0.0;
     }
 
-    float rotationDiff = sf::angleDifference(getRotation(), target_rotation);
+    float rotationDiff;
+    if (rotation == 0.0f) {
+        rotationDiff = sf::angleDifference(getRotation(), target_rotation);
+    } else {
+        rotationDiff = rotation;
+    }
 
     if (rotationDiff > 1.0)
         setAngularVelocity(turn_speed * getSystemEffectiveness(SYS_Maneuver));
@@ -1247,6 +1484,164 @@ string SpaceShip::getScriptExportModificationsOnTemplate()
 
     return ret;
 }
+
+// Client-side functions to send a command to the server.
+void SpaceShip::commandTargetRotation(float target)
+{
+    sf::Packet packet;
+    packet << CMD_TARGET_ROTATION << target;
+    sendClientCommand(packet);
+}
+
+void SpaceShip::commandRotation(float rotation)
+{
+    sf::Packet packet;
+    packet << CMD_ROTATION << rotation;
+    sendClientCommand(packet);
+}
+
+void SpaceShip::commandImpulse(float target)
+{
+    sf::Packet packet;
+    packet << CMD_IMPULSE << target;
+    sendClientCommand(packet);
+}
+
+void SpaceShip::commandWarp(int8_t target)
+{
+    sf::Packet packet;
+    packet << CMD_WARP << target;
+    sendClientCommand(packet);
+}
+
+void SpaceShip::commandJump(float distance)
+{
+    sf::Packet packet;
+    packet << CMD_JUMP << distance;
+    sendClientCommand(packet);
+}
+
+void SpaceShip::commandSetTarget(P<SpaceObject> target)
+{
+    sf::Packet packet;
+    if (target)
+        packet << CMD_SET_TARGET << target->getMultiplayerId();
+    else
+        packet << CMD_SET_TARGET << int32_t(-1);
+    sendClientCommand(packet);
+}
+
+void SpaceShip::commandLoadTube(int8_t tubeNumber, EMissileWeapons missileType)
+{
+    sf::Packet packet;
+    packet << CMD_LOAD_TUBE << tubeNumber << missileType;
+    sendClientCommand(packet);
+}
+
+void SpaceShip::commandUnloadTube(int8_t tubeNumber)
+{
+    sf::Packet packet;
+    packet << CMD_UNLOAD_TUBE << tubeNumber;
+    sendClientCommand(packet);
+}
+
+void SpaceShip::commandFireTube(int8_t tubeNumber, float missile_target_angle)
+{
+    sf::Packet packet;
+    packet << CMD_FIRE_TUBE << tubeNumber << missile_target_angle;
+    sendClientCommand(packet);
+}
+
+void SpaceShip::commandFireTubeAtTarget(int8_t tubeNumber, P<SpaceObject> target)
+{
+  float targetAngle = 0.0;
+
+  if (!target || tubeNumber < 0 || tubeNumber >= getWeaponTubeCount())
+    return;
+
+  targetAngle = weapon_tube[tubeNumber].calculateFiringSolution(target);
+
+  if (targetAngle == std::numeric_limits<float>::infinity())
+      targetAngle = getRotation() + weapon_tube[tubeNumber].getDirection();
+
+  commandFireTube(tubeNumber, targetAngle);
+}
+
+void SpaceShip::commandDock(P<SpaceObject> object)
+{
+    if (!object) return;
+    sf::Packet packet;
+    packet << CMD_DOCK << object->getMultiplayerId();
+    sendClientCommand(packet);
+}
+
+void SpaceShip::commandUndock()
+{
+    sf::Packet packet;
+    packet << CMD_UNDOCK;
+    sendClientCommand(packet);
+}
+
+void SpaceShip::commandAbortDock()
+{
+    sf::Packet packet;
+    packet << CMD_ABORT_DOCK;
+    sendClientCommand(packet);
+}
+
+void SpaceShip::commandSetBeamFrequency(int32_t frequency)
+{
+    sf::Packet packet;
+    packet << CMD_SET_BEAM_FREQUENCY << frequency;
+    sendClientCommand(packet);
+}
+
+void SpaceShip::commandSetBeamSystemTarget(ESystem system)
+{
+    sf::Packet packet;
+    packet << CMD_SET_BEAM_SYSTEM_TARGET << system;
+    sendClientCommand(packet);
+}
+
+void SpaceShip::commandSetShieldFrequency(int32_t frequency)
+{
+    sf::Packet packet;
+    packet << CMD_SET_SHIELD_FREQUENCY << frequency;
+    sendClientCommand(packet);
+}
+
+void SpaceShip::commandCombatManeuverBoost(float amount)
+{
+    combat_maneuver_boost_request = amount;
+    sf::Packet packet;
+    packet << CMD_COMBAT_MANEUVER_BOOST << amount;
+    sendClientCommand(packet);
+}
+
+void SpaceShip::commandCombatManeuverStrafe(float amount)
+{
+    combat_maneuver_strafe_request = amount;
+    sf::Packet packet;
+    packet << CMD_COMBAT_MANEUVER_STRAFE << amount;
+    sendClientCommand(packet);
+}
+
+void SpaceShip::commandLaunchProbe(sf::Vector2f target_position)
+{
+    sf::Packet packet;
+    packet << CMD_LAUNCH_PROBE << target_position;
+    sendClientCommand(packet);
+}
+
+void SpaceShip::commandHackingFinished(P<SpaceObject> target, string target_system)
+{
+    sf::Packet packet;
+    packet << CMD_HACKING_FINISHED;
+    packet << target->getMultiplayerId();
+    packet << target_system;
+    sendClientCommand(packet);
+}
+
 
 string getMissileWeaponName(EMissileWeapons missile)
 {

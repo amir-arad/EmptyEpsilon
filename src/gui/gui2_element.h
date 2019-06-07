@@ -1,3 +1,4 @@
+
 #ifndef GUI2_ELEMENT_H
 #define GUI2_ELEMENT_H
 
@@ -7,6 +8,9 @@
 #include "hotkeyConfig.h"
 #include "gui2_container.h"
 #include "main.h"
+#include "spaceObjects/spaceship.h"
+#include "spaceObjects/playerSpaceship.h"
+#include "playerinfo.h"
 
 enum EGuiAlign
 {
@@ -38,12 +42,13 @@ protected:
     bool focus;
     bool active;
     string id;
+    P<SpaceShip> target_spaceship;
 public:
     constexpr static float GuiSizeMatchHeight = -1.0;
     constexpr static float GuiSizeMatchWidth = -1.0;
     constexpr static float GuiSizeMax = -2.0;
 
-    GuiElement(GuiContainer* owner, string id);
+    GuiElement(GuiContainer* owner, string id, P<SpaceShip> targetSpaceship = (P<SpaceShip>) my_spaceship);
     virtual ~GuiElement();
 
     virtual void onDraw(sf::RenderTarget& window) {}
@@ -88,6 +93,8 @@ public:
     //Have this GuiElement destroyed, but at a safe point&time in the code. (handled by the container)
     void destroy();
     
+    void setTargetSpaceship(P<SpaceShip> targetSpaceship){target_spaceship = targetSpaceship;}
+
     friend class GuiContainer;
     friend class GuiCanvas;
 private:

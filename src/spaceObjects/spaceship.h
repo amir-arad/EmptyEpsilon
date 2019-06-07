@@ -51,6 +51,26 @@ public:
 
 class SpaceShip : public ShipTemplateBasedObject
 {
+protected:
+    static const int16_t CMD_TARGET_ROTATION = 0x0001;
+    static const int16_t CMD_IMPULSE = 0x0002;
+    static const int16_t CMD_WARP = 0x0003;
+    static const int16_t CMD_JUMP = 0x0004;
+    static const int16_t CMD_SET_TARGET = 0x0005;
+    static const int16_t CMD_LOAD_TUBE = 0x0006;
+    static const int16_t CMD_UNLOAD_TUBE = 0x0007;
+    static const int16_t CMD_FIRE_TUBE = 0x0008;
+    static const int16_t CMD_DOCK = 0x0010;
+    static const int16_t CMD_UNDOCK = 0x0011;
+    static const int16_t CMD_SET_BEAM_FREQUENCY = 0x0018;
+    static const int16_t CMD_SET_BEAM_SYSTEM_TARGET = 0x0019;
+    static const int16_t CMD_SET_SHIELD_FREQUENCY = 0x001A; // need player override
+    static const int16_t CMD_COMBAT_MANEUVER_BOOST = 0x0021;
+    static const int16_t CMD_COMBAT_MANEUVER_STRAFE = 0x0022;
+    static const int16_t CMD_LAUNCH_PROBE = 0x0023; // need player override
+    static const int16_t CMD_ABORT_DOCK = 0x0027;
+    static const int16_t CMD_HACKING_FINISHED = 0x0029;
+    static const int16_t CMD_ROTATION = 0x0030;
 public:
     constexpr static int max_frequency = 20;
     constexpr static float combat_maneuver_charge_time = 20.0f; /*< Amount of time it takes to fully charge the combat maneuver system */
@@ -66,6 +86,21 @@ public:
     constexpr static float heat_per_warp = 0.02;
     constexpr static float unhack_time = 180.0f; //It takes this amount of time to go from 100% hacked to 0% hacked for systems.
 
+    // Content of a line in the ship's log
+    class ShipLogEntry
+    {
+    public:
+        string prefix;
+        string text;
+        sf::Color color;
+
+        ShipLogEntry() {}
+        ShipLogEntry(string prefix, string text, sf::Color color)
+        : prefix(prefix), text(text), color(color) {}
+
+        bool operator!=(const ShipLogEntry& e) { return prefix != e.prefix || text != e.text || color != e.color; }
+    };
+
     float energy_level;
     float max_energy_level;
     ShipSystem systems[SYS_COUNT];
@@ -73,6 +108,11 @@ public:
      *[input] Ship will try to aim to this rotation. (degrees)
      */
     float target_rotation;
+
+    /*!
+     *[input] Ship will rotate in this velocity. ([-1,1], overrides target_rotation)
+     */
+    float rotation;
 
     /*!
      * [input] Amount of impulse requested from the user (-1.0 to 1.0)
@@ -167,6 +207,9 @@ public:
     P<SpaceObject> docking_target; //Server only
     sf::Vector2f docking_offset; //Server only
 
+    // Ship's log container
+    std::vector<ShipLogEntry> ships_log;
+
     SpaceShip(string multiplayerClassName, float multiplayer_significant_range=-1);
 
 #if FEATURE_3D_RENDERING
@@ -177,6 +220,8 @@ public:
      */
     virtual void drawOnRadar(sf::RenderTarget& window, sf::Vector2f position, float scale, bool long_range) override;
     virtual void drawOnGMRadar(sf::RenderTarget& window, sf::Vector2f position, float scale, bool long_range) override;
+    void onReceiveClientCommand(int32_t client_id, sf::Packet& packet);
+    virtual void handleClientCommand(int32_t client_id, int16_t command, sf::Packet& packet);
 
     virtual void update(float delta) override;
     virtual float getShieldRechargeRate(int shield_index) override;
@@ -252,6 +297,11 @@ public:
     virtual int scanningComplexity(P<SpaceObject> other) override;
     virtual int scanningChannelDepth(P<SpaceObject> other) override;
     virtual void scannedBy(P<SpaceObject> other) override;
+
+    // Ship's log functions
+    void addToShipLog(string message, sf::Color color);
+    void addToShipLogBy(string message, P<SpaceObject> target);
+    const std::vector<ShipLogEntry>& getShipsLog() const;
 
     bool isFriendOrFoeIdentified();//[DEPRICATED]
     bool isFullyScanned();//[DEPRICATED]
@@ -401,6 +451,29 @@ public:
     //Return a string that can be appended to an object create function in the lua scripting.
     // This function is used in getScriptExport calls to adjust for tweaks done in the GM screen.
     string getScriptExportModificationsOnTemplate();
+    
+        // Client command functions
+    void commandTargetRotation(float target);
+    void commandRotation(float rotation);
+    void commandImpulse(float target);
+    void commandWarp(int8_t target);
+    void commandJump(float distance);
+    void commandSetTarget(P<SpaceObject> target);
+    void commandLoadTube(int8_t tubeNumber, EMissileWeapons missileType);
+    void commandUnloadTube(int8_t tubeNumber);
+    void commandFireTube(int8_t tubeNumber, float missile_target_angle);    
+    void commandFireTubeAtTarget(int8_t tubeNumber, P<SpaceObject> target);
+    void commandDock(P<SpaceObject> station);
+    void commandUndock();
+    void commandAbortDock();
+    void commandSetBeamFrequency(int32_t frequency);
+    void commandSetBeamSystemTarget(ESystem system);
+    void commandSetShieldFrequency(int32_t frequency);
+    void commandCombatManeuverBoost(float amount);
+    void commandCombatManeuverStrafe(float strafe);
+    void commandLaunchProbe(sf::Vector2f target_position);
+    void commandHackingFinished(P<SpaceObject> target, string target_system);
+
 };
 
 float frequencyVsFrequencyDamageFactor(int beam_frequency, int shield_frequency);

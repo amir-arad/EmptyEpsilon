@@ -39,8 +39,8 @@ void GuiRadarView::onDraw(sf::RenderTarget& window)
     // Render texture to screen
 
     //Hacky, when not relay and we have a ship, center on it.
-    if (my_spaceship && auto_center_on_my_ship)
-        view_position = my_spaceship->getPosition();
+    if (target_spaceship && auto_center_on_my_ship)
+        view_position = target_spaceship->getPosition();
 
     //Setup our textures for rendering
     adjustRenderTexture(background_texture);

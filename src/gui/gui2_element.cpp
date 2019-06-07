@@ -1,8 +1,8 @@
 #include "gui2_element.h"
 #include "main.h"
 
-GuiElement::GuiElement(GuiContainer* owner, string id)
-: position_alignment(ATopLeft), owner(owner), rect(0, 0, 0, 0), visible(true), enabled(true), hover(false), focus(false), active(false), id(id)
+GuiElement::GuiElement(GuiContainer* owner, string id, P<SpaceShip> targetSpaceship)
+: position_alignment(ATopLeft), owner(owner), rect(0, 0, 0, 0), visible(true), enabled(true), hover(false), focus(false), active(false), id(id), target_spaceship(targetSpaceship)
 {
     owner->elements.push_back(this);
     destroyed = false;
