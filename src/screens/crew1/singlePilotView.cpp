@@ -60,36 +60,16 @@ SinglePilotView::SinglePilotView(GuiContainer* owner, P<PlayerSpaceship> targetS
     // Joystick controls.
     radar->setJoystickCallbacks(
         [this](float x_position) {
-            if (target_spaceship)
-            {
-                float angle = target_spaceship->getRotation() + x_position;
-                target_spaceship->commandTargetRotation(angle);
-            }
+            radar->joystickControl(x_position,1);
         },
         [this](float y_position) {
-            if (target_spaceship && (fabs(y_position) > 20))
-            {
-                // Add some more hysteresis, since y-axis can be hard to keep at 0
-                float value;
-                if (y_position > 0)
-                    value = (y_position-20) * 1.25 / 100;
-                else
-                    value = (y_position+20) * 1.25 / 100;
-
-                target_spaceship->commandCombatManeuverBoost(-value);
-            }
-            else if (target_spaceship)
-            {
-                target_spaceship->commandCombatManeuverBoost(0.0);
-            }
+             radar->joystickControl(y_position,2);
         },
         [this](float z_position) {
-            if (target_spaceship)
-                target_spaceship->commandImpulse(-(z_position / 100));
+            radar->joystickControl(z_position,3);
         },
         [this](float r_position) {
-            if (target_spaceship)
-                target_spaceship->commandCombatManeuverStrafe(r_position / 100);
+            radar->joystickControl(r_position,4);
         }
     );
 

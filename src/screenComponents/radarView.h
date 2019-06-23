@@ -98,6 +98,7 @@ public:
     virtual bool onMouseDown(sf::Vector2f position);
     GuiRadarView* setTargetSpaceship(P<SpaceShip> targetSpaceship){target_spaceship = targetSpaceship; return this;}
 
+    void joystickControl(float axis_position, int axis_number);
 private:
     void updateGhostDots();
     void drawBackground(sf::RenderTarget& window);
