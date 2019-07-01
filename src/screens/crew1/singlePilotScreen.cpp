@@ -174,8 +174,7 @@ void SinglePilotScreen::onJoystickAxis(AxisAction& axisAction){
             if (axisAction.action == "IMPULSE"){
                 my_spaceship->commandImpulse(axisAction.value);  
             } else if (axisAction.action == "ROTATE"){
-                float angle = my_spaceship->getRotation() + axisAction.value * 180;
-                my_spaceship->commandTargetRotation(angle);
+                my_spaceship->commandTurnSpeed(axisAction.value);
             } else if (axisAction.action == "STRAFE"){
                 my_spaceship->commandCombatManeuverStrafe(axisAction.value);
             } else if (axisAction.action == "BOOST"){
