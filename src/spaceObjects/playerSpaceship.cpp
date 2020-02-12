@@ -840,11 +840,11 @@ float PlayerSpaceship::getNetSystemEnergyUsage()
         }
         else
         {
-            float powerFactor = 1.f;
+            float shipTypeFactor = 1.f;
             if(ship_template && ship_template->getType() == ShipTemplate::TemplateType::Drone){
-                powerFactor = drones_energy_factor;
+                shipTypeFactor = drones_energy_factor;
             }
-            net_power -= system_power_user_factor[n] * systems[n].power_level;
+            net_power -= system_power_user_factor[n] * systems[n].power_level * shipTypeFactor;
         }
     }
 
@@ -1587,7 +1587,7 @@ void PlayerSpaceship::handleClientCommand(int32_t client_id, int16_t command, sf
             packet >> target_id >> target_system;
             P<SpaceShip> target = game_server->getObjectById(target_id);
             if (target && target_system < SYS_COUNT && target->hasSystem(target_system) && target->canBeHackedBy(this))
-                ScienceTask::addHackTask(scienceTasks, my_spaceship->max_science_tasks, target_id, target_system);
+                ScienceTask::addHackTask(scienceTasks, max_science_tasks, target_id, target_system);
         }
         break;
     case CMD_SCAN_TASK:
@@ -1596,7 +1596,7 @@ void PlayerSpaceship::handleClientCommand(int32_t client_id, int16_t command, sf
             packet >> target_id;
             P<SpaceShip> target = game_server->getObjectById(target_id);
             if (target && target->canBeScannedBy(this))
-                ScienceTask::addScanTask(scienceTasks, my_spaceship->max_science_tasks, target_id);
+                ScienceTask::addScanTask(scienceTasks, max_science_tasks, target_id);
         }
         break;
     case CMD_TASK_COMPLETED:
@@ -1615,6 +1615,14 @@ void PlayerSpaceship::handleClientCommand(int32_t client_id, int16_t command, sf
                     }
                 }
                 task.clear();
+            }
+        }
+        break;
+    case CMD_CLEAR_TASKS:
+        {
+            for(int n = 0; n < max_science_tasks; n++)
+            {
+                scienceTasks[n].clear();
             }
         }
         break;
@@ -1949,6 +1957,12 @@ void PlayerSpaceship::commandAddScanTask(P<SpaceObject> object){
 void PlayerSpaceship::commandCompleteScienceTask(int taskIndex, bool success){
     sf::Packet packet;
     packet << CMD_TASK_COMPLETED << taskIndex << success;
+    sendClientCommand(packet);
+}
+
+void PlayerSpaceship::commandClearAllTasks(){
+    sf::Packet packet;
+    packet << CMD_CLEAR_TASKS;
     sendClientCommand(packet);
 }
 
