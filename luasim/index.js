@@ -51,7 +51,7 @@ if (lua_pcall(L, 1, 0, 0) !== LUA_OK) {
 }
 const shipsByClass = getShips();
 for (let [clazz, ships] of Object.entries(shipsByClass)) {
-    const text = `
+        const text = `
 == ${clazz} ==
 ${ships.map(ship => `
 === ${ship.name} ===
@@ -63,23 +63,9 @@ ${ship.rows.map(
     ([k, v]) => `| '''${k}'''\n| ${v}\n`).join('|-\n')}|}`
 ).join('\n')}
 `;
-const filePath = path.join(__dirname, `shipTemplates-${clazz}.md`);
-try {
-    fs.unlinkSync(filePath);
-} catch(err){
-
+    const filePath = path.join(__dirname, `shipTemplates-${clazz}.md`);
+    try {
+        fs.unlinkSync(filePath);
+    } catch(err){ }
+    fs.writeFileSync(filePath, text);
 }
-fs.writeFileSync(filePath, text);
-}
-// const text = `=== Huge Station ===
-// The size of a sprawling town, stations at this scale represent a faction's center of spaceborne power in a region. They serve many functions at once and represent an extensive investment of time, money, and labor. A huge station's shields and thick hull can keep it intact long enough for reinforcements to arrive, even when faced with an ongoing siege or massive, perfectly coordinated assault.
-// {| class="wikitable"
-// |+ Statistics
-// |-
-// | '''hull'''
-// | 800
-// |-
-// | ''' shields '''
-// | 1200/1200/1200/1200
-// |}`;
-// fs.writeFileSync(path.join(__dirname, 'shipTemplates.md'), text);

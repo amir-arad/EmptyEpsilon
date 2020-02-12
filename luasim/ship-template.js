@@ -103,19 +103,3 @@ exports.ShipTemplate = function ShipTemplate() {
   }
   return res;
 };
-
-/*
-
-=== Huge Station ===
-The size of a sprawling town, stations at this scale represent a faction's center of spaceborne power in a region. They serve many functions at once and represent an extensive investment of time, money, and labor. A huge station's shields and thick hull can keep it intact long enough for reinforcements to arrive, even when faced with an ongoing siege or massive, perfectly coordinated assault.
-{| class="wikitable"
-|+ Statistics
-|-
-| '''hull'''
-| 800
-|-
-| ''' shields '''
-| 1200/1200/1200/1200
-|}
-
-*/
