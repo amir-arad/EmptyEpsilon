@@ -215,7 +215,13 @@ void WeaponsHeliosScreen::iterateTagrets(bool forward, bool enemiesOnly, bool ne
 void WeaponsHeliosScreen::onHotkey(const HotkeyResult& key)
 {
     if (key.category == "WEAPONS" && my_spaceship) {
-        if (key.hotkey == "BEAM_FREQUENCY_INCREASE") {
+        if (key.hotkey == "TOGGLE_SHIELDS") {
+            my_spaceship->commandSetShields(!my_spaceship->shields_active);
+        } else if (key.hotkey == "ENABLE_SHIELDS") {
+            my_spaceship->commandSetShields(true);
+        } else if (key.hotkey == "DISABLE_SHIELDS") {
+            my_spaceship->commandSetShields(false);
+        } else if (key.hotkey == "BEAM_FREQUENCY_INCREASE") {
             my_spaceship->commandSetBeamFrequency((my_spaceship->beam_frequency + 1) % SpaceShip::max_frequency);
         } else if (key.hotkey == "BEAM_FREQUENCY_DECREASE") {
             my_spaceship->commandSetBeamFrequency((SpaceShip::max_frequency + my_spaceship->beam_frequency - 1) % SpaceShip::max_frequency);
