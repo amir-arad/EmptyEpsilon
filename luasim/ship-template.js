@@ -73,7 +73,9 @@ exports.ShipTemplate = function ShipTemplate() {
       return this;
     },
     setWarpSpeed(warp) {
-      shipdata.rows.push(["warp speed", warp]);
+      if (warp > 0){
+        shipdata.rows.push(["warp speed", warp]);
+      }
       return this;
     },
     setCombatManeuver(boost, strafe) {
@@ -82,7 +84,7 @@ exports.ShipTemplate = function ShipTemplate() {
       return this;
     },
     setBeam(idx, arc, dir, range, cycleTime, dmg) {
-      shipdata.rows.push([getDirectionString(dir) + " beam deapon", (dmg / cycleTime).toFixed(2) + " DPS"]);
+      shipdata.rows.push([getDirectionString(dir) + " beam weapon", (dmg / cycleTime).toFixed(2) + " DPS"]);
       return this;
     },
     setTubes(amount, load_time) {

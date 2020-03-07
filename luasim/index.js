@@ -52,7 +52,6 @@ if (lua_pcall(L, 1, 0, 0) !== LUA_OK) {
 const shipsByClass = getShips();
 for (let [clazz, ships] of Object.entries(shipsByClass)) {
         const text = `
-== ${clazz} ==
 ${ships.map(ship => `
 === ${ship.name} ===
 ${ship.description}
