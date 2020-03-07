@@ -45,6 +45,8 @@ HotkeyConfig::HotkeyConfig()
     newKey("COMBAT_BACK", std::make_tuple("Combat maneuver reverse", "[alt];Down"));
 
     newCategory("SCIENCE", "Science Officer");
+    newKey("ZOOM_IN", std::make_tuple("increase radar zoom", "9"));
+    newKey("ZOOM_OUT", std::make_tuple("decrease radar zoom", "0"));
     newKey("POV_SHIP", std::make_tuple("set radar point of view to main ship", "Q"));
     newKey("POV_PROBE", std::make_tuple("set radar point of view to probe", "A"));
     newKey("CLEAR_TASKS", std::make_tuple("abort all tasks", "[alt];C"));

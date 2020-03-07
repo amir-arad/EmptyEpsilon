@@ -407,7 +407,11 @@ void ScienceHeliosScreen::onHotkey(const HotkeyResult& key)
         } 
     } else if (key.category == "SCIENCE" && my_spaceship){
         int tasksCount = ScienceTask::countTasks(my_spaceship->scienceTasks, PlayerSpaceship::max_science_tasks);
-        if (key.hotkey == "POV_SHIP") {
+        if (key.hotkey == "ZOOM_IN") {
+            zoom = std::min(1.0, zoom + 0.05);
+        } else if (key.hotkey == "ZOOM_OUT") {
+            zoom = std::max(0.0, zoom - 0.05);
+        } else if (key.hotkey == "POV_SHIP") {
             probe_view = false;
         } else if (key.hotkey == "POV_PROBE") {
             probe_view = true;
