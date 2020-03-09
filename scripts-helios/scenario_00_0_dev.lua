@@ -15,7 +15,7 @@ function init()
         setFactionVsFactionState("MCF Extreme", "FSN", "Enemy")
         setFactionVsFactionState("Raiders", "FSN", "Enemy")
         setFactionVsFactionState("Corp1", "FSN", "Friendly")
-        PlayerSpaceship():setTemplate("Gravitas"):setCallSign("PL4"):setFaction("FSN"):setPosition(0, 0):setWarpFrequency(5)
+        PlayerSpaceship():setTemplate("Gravitas"):setCallSign("PL4"):setFaction("FSN"):setPosition(0, 0):setWarpFrequency(5):setCanBeDestroyed(false)
 
         -- enemyShips()
         -- tactical()

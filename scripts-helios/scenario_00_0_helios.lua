@@ -17,15 +17,15 @@ require("helios.lua")
 function init()
 	initLayers()
 	-- Spawn a player Gravitas.
-	PlayerSpaceship():setFaction("FSN"):setTemplate("Gravitas")
+	PlayerSpaceship():setFaction("FSN"):setTemplate("Gravitas"):setCanBeDestroyed(false)
 	addGMFunction("add Mouse", function()
 		getObjectByCallSign("PL4"):addDroneCargo("L3 Mouse")
 	end)
 	addGMFunction("add Cat", function()
-			getObjectByCallSign("PL4"):addDroneCargo("L3 Cat")
+		getObjectByCallSign("PL4"):addDroneCargo("L3 Cat")
 	end)
 	addGMFunction("add Sparrow", function()
-			getObjectByCallSign("PL4"):addDroneCargo("M19 Sparrow")
+		getObjectByCallSign("PL4"):addDroneCargo("M19 Sparrow")
 	end)
 end
 
