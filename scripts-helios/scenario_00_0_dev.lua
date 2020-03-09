@@ -22,11 +22,21 @@ function init()
         -- enemyTargets()
         targets()
         -- probes()
+        addGMFunction("add Mouse", function()
+                getObjectByCallSign("PL4"):addDroneCargo("L3 Mouse")
+        end)
+        addGMFunction("add Cat", function()
+                getObjectByCallSign("PL4"):addDroneCargo("L3 Cat")
+        end)
+        addGMFunction("add Sparrow", function()
+                getObjectByCallSign("PL4"):addDroneCargo("M19 Sparrow")
+        end)
 end
 
 function update(delta)
 	--No victory condition
-	updateHelios(delta)
+        updateHelios(delta)
+
 end
 
 function probes()
