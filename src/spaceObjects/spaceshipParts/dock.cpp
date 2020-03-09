@@ -15,15 +15,16 @@ static bool isDockOpenForDocking (Dock &d){
 
 Dock *Dock::findOpenForDocking(Dock docks[], int size)
 {
+    Dock* lastDock = docks + max_docks_count;
     int randIdx = irandom(0, size - 1);
-    Dock *dock = std::find_if(docks + randIdx, docks + size, isThermicDockOpenForDocking);
-    if (dock == docks + size)
-        dock = std::find_if(docks, docks + size, isThermicDockOpenForDocking);
-    if (dock == docks + size)
-        dock = std::find_if(docks + randIdx, docks + size, isDockOpenForDocking);
-    if (dock == docks + size)
-        dock = std::find_if(docks, docks + size, isDockOpenForDocking);
-    if (dock == docks + size)
+    Dock *dock = std::find_if(docks + randIdx, lastDock, isThermicDockOpenForDocking);
+    if (dock == lastDock)
+        dock = std::find_if(docks, lastDock, isThermicDockOpenForDocking);
+    if (dock == lastDock)
+        dock = std::find_if(docks + randIdx, lastDock, isDockOpenForDocking);
+    if (dock == lastDock)
+        dock = std::find_if(docks, lastDock, isDockOpenForDocking);
+    if (dock == lastDock)
         return nullptr;
     else
         return dock;

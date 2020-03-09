@@ -272,7 +272,7 @@ public:
     ShipFileLogger file_logger_excalibur;
 
     SpaceShip(string multiplayerClassName, float multiplayer_significant_range=-1);
-
+    void addDroneCargo(string name);
 #if FEATURE_3D_RENDERING
     virtual void draw3DTransparent() override;
 #endif
