@@ -97,6 +97,8 @@ bool ShipCargo::onLaunch(Dock &source)
             for (unsigned int n = 0; n < SYS_COUNT; n++)
                 if (ship->hasSystem(ESystem(n)))
                     ship->addHeat(ESystem(n), getHeat() / systemsCount);
+            ship->setAutoCoolant(true);
+            ship->setMaxCoolant(5);
             return true;
         }
     }
