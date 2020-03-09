@@ -87,7 +87,7 @@ bool ShipCargo::onLaunch(Dock &source)
             ship->setPosition(source.getLaunchPosition(ship->getRadius()));
             ship->setRotation(source.getLaunchRotation());
             ship->setHull(hull_strength);
-            ship->impulse_request = -0.5;
+            ship->impulse_request = -0.1;
             int systemsCount = 0;
             for (unsigned int n = 0; n < SYS_COUNT; n++){
                 if (ship->hasSystem(ESystem(n)))
