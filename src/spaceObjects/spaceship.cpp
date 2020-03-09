@@ -95,6 +95,7 @@ REGISTER_SCRIPT_SUBCLASS_NO_CREATE(SpaceShip, ShipTemplateBasedObject)
     // Adds a message to the ship's log. Takes a string as the message and a
     // sf::Color.
     REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, addToShipLog);
+    REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, addDroneCargo);
 
     // Command functions
     REGISTER_SCRIPT_CLASS_FUNCTION(SpaceShip, commandTargetRotation);
@@ -675,24 +676,29 @@ void SpaceShip::applyTemplateValues()
     for (int i = 0; droneIdx < max_docks_count && i < ship_template->repair_dock_count; i++, droneIdx++){
         docks[droneIdx].setDockType(Dock_Repair);
     }
-    int maxActiveDockIndex = droneIdx;
     for (; droneIdx < max_docks_count; droneIdx++){
         docks[droneIdx].setDockType(Dock_Disabled);
     }
     for (auto &droneTemplate : ship_template->drones) // access by reference to avoid copying
     {  
-        P<ShipTemplate> drone_ship_template = ShipTemplate::getTemplate(droneTemplate.template_name);
         // add drones one by one, assuming all drones are empty, and template is of drone type
         for (int i = 0; i < droneTemplate.count; i++)
         {
-            Dock *dock = Dock::findOpenForDocking(docks, maxActiveDockIndex);
-            if (!dock) { // no more available docks
-                LOG(ERROR) << "Too many drones: " << template_name;
-                break; 
-            }
-            P<ShipCargo> cargo = new ShipCargo(drone_ship_template);
-            dock->dock(cargo);
+            addDroneCargo(droneTemplate.template_name);
         }
+    }
+}
+
+void SpaceShip::addDroneCargo(string name)
+{
+    int maxActiveDockIndex = ship_template->launcher_dock_count + ship_template->thermic_dock_count + ship_template->repair_dock_count;
+    P<ShipTemplate> drone_ship_template = ShipTemplate::getTemplate(name);
+    Dock *dock = Dock::findOpenForDocking(docks, maxActiveDockIndex);
+    if (!dock) { // no more available docks
+        LOG(ERROR) << "Too many drones: " << template_name;
+    } else {
+        P<ShipCargo> cargo = new ShipCargo(drone_ship_template);
+        dock->dock(cargo);
     }
 }
 
@@ -1749,7 +1755,8 @@ string SpaceShip::getScriptExportModificationsOnTemplate()
 
 bool SpaceShip::tryDockDrone(SpaceShip* other){
     if(other->ship_template->getType() == ShipTemplate::TemplateType::Drone){
-        Dock* dock = Dock::findOpenForDocking(docks, max_docks_count);
+        int maxActiveDockIndex = ship_template->launcher_dock_count + ship_template->thermic_dock_count + ship_template->repair_dock_count;
+        Dock* dock = Dock::findOpenForDocking(docks, maxActiveDockIndex);
         if (dock){
             P<ShipCargo> cargo = new ShipCargo(other);
             dock->dock(cargo);
