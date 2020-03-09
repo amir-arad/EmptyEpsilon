@@ -1772,7 +1772,7 @@ float SpaceShip::getDronesControlRange() {
             0.0, 
             3.0, 
             1, 
-            PreferencesManager::get("drones_max_range", "15000").toInt()
+            PreferencesManager::get("drones_max_range", "22500").toInt()
         ); 
 }
 
