@@ -188,7 +188,7 @@ SpaceShip::SpaceShip(string multiplayerClassName, float multiplayer_significant_
 
     registerMemberReplication(&mission_time_diff);
     registerMemberReplication(&target_rotation, 1.5);
-    registerMemberReplication(&turnSpeed, 1.5);
+    registerMemberReplication(&turnSpeed, 0.1);
     registerMemberReplication(&impulse_request, 0.1);
     registerMemberReplication(&current_impulse, 0.5);
     registerMemberReplication(&has_warp_drive);
