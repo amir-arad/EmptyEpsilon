@@ -280,7 +280,7 @@ void EngineControlScreen::onDraw(sf::RenderTarget& window)
                 addSystemEffect("Tractor beam drag speed", string(int(effectiveness * 100)) + "%");
                 break;
             case SYS_Drones:
-                addSystemEffect("Drones control range", string(my_spaceship->getDronesControlRange(),1) + "U");
+                addSystemEffect("Drones control range", string(my_spaceship->getDronesControlRange() / 1000,1) + "U");
                 break;
             default:
                 break;
