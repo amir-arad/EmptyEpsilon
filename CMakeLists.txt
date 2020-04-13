@@ -1,10 +1,8 @@
 project(EmptyEpsilon)
 cmake_minimum_required(VERSION 2.8.12)
 
-
 option(ENABLE_CRASH_LOGGER "Enable the drmingw crash logging facilities" OFF)
 message(STATUS "ENABLE_CRASH_LOGGER is " ${ENABLE_CRASH_LOGGER})
-# cmake_policy(SET CMP0074 NEW)
 
 # Check if serious proton dir is set.
 if(NOT DEFINED SERIOUS_PROTON_DIR)
@@ -15,7 +13,7 @@ if(NOT IS_ABSOLUTE "${SERIOUS_PROTON_DIR}")
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
-	add_compile_definitions(DEBUG)
+	add_definitions(-DDEBUG)
 endif(CMAKE_BUILD_TYPE MATCHES Debug)
 
 if(ENABLE_CRASH_LOGGER)
@@ -33,31 +31,32 @@ if(NOT DEFINED CPACK_PACKAGE_VERSION_MAJOR)
 endif(NOT DEFINED CPACK_PACKAGE_VERSION_MAJOR)
 
 # Set our optimization flags.
-set(OPTIMIZER_FLAGS "")
+set(OPTIMIZER_FLAGS)
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     # On gcc, we want some general optimalizations that improve speed a lot.
-	set(OPTIMIZER_FLAGS "${OPTIMIZER_FLAGS} -O3 -flto -funsafe-math-optimizations")
+    set(OPTIMIZER_FLAGS ${OPTIMIZER_FLAGS} -O3 -flto -funsafe-math-optimizations)
+
     # If we are compiling for a rasberry pi, we want to aggressively optimize for the CPU we are running on.
     # Note that this check only works if we are compiling directly on the pi, as it is a dirty way of checkif if we are on the pi.
     if(EXISTS /opt/vc/include/bcm_host.h OR COMPILE_FOR_PI)
-        set(OPTIMIZER_FLAGS "${OPTIMIZER_FLAGS} -mcpu=native -mfpu=neon-vfpv4 -mfloat-abi=hard")
+        set(OPTIMIZER_FLAGS ${OPTIMIZER_FLAGS} -mcpu=native -mfpu=neon-vfpv4 -mfloat-abi=hard)
     endif()
 endif()
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${OPTIMIZER_FLAGS}")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${OPTIMIZER_FLAGS}")
-set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -g1 ${OPTIMIZER_FLAGS}")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g1 ${OPTIMIZER_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror=return-type")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror=return-type")
 
 # install resources, scripts, and packs to app bundle instead of system dir.
 if(APPLE)
-set(CMAKE_INSTALL_PREFIX "./")
+    set(CMAKE_INSTALL_PREFIX "./")
 elseif(UNIX)
-# Set RESOURCE_BASE_DIR on Unix so the built binary is able to find resources
-add_definitions(-DRESOURCE_BASE_DIR="${CMAKE_INSTALL_PREFIX}/share/emptyepsilon/")
+    # Set RESOURCE_BASE_DIR on Unix so the built binary is able to find resources
+    add_definitions(-DRESOURCE_BASE_DIR="${CMAKE_INSTALL_PREFIX}/share/emptyepsilon/")
+endif()
+
+# Set minimum target macOS version
+if(APPLE)
+	set(MACOSX_DEPLOYMENT_TARGET "10.10")
 endif()
 
 if(CONFIG_DIR)
@@ -76,8 +75,6 @@ endif()
 set(EXECUTABLE_NAME "EmptyEpsilon")
 set(SOURCES
 	src/main.cpp
-	src/cargo.cpp
-	src/shipCargo.cpp
 	src/threatLevelEstimate.cpp
 	src/preferenceManager.cpp
 	src/pathPlanner.cpp
@@ -95,10 +92,8 @@ set(SOURCES
 	src/script.cpp
 	src/playerInfo.cpp
 	src/gameStateLogger.cpp
-	src/shipFilter.cpp
 	src/shipTemplate.cpp
 	src/beamTemplate.cpp
-	src/tractorBeamTemplate.cpp
 	src/missileWeaponData.cpp
 	src/factionInfo.cpp
 	src/mesh.cpp
@@ -128,30 +123,16 @@ set(SOURCES
 	src/screens/crew6/weaponsScreen.cpp
 	src/screens/crew6/helmsScreen.cpp
 	src/screens/crew1/singlePilotScreen.cpp
-	src/screens/crew1/singlePilotView.cpp
 	src/screens/extra/damcon.cpp
 	src/screens/extra/powerManagement.cpp
 	src/screens/extra/databaseScreen.cpp
 	src/screens/extra/commsScreen.cpp
 	src/screens/extra/shipLogScreen.cpp
-	src/screens/extra/radarScreen.cpp
-	src/screens/extra/probeScreen.cpp
 	src/screens/gm/gameMasterScreen.cpp
 	src/screens/gm/objectCreationView.cpp
 	src/screens/gm/globalMessageEntryView.cpp
 	src/screens/gm/chatDialog.cpp
 	src/screens/gm/tweak.cpp
-	src/screens/gm/factions.cpp
-	src/screens/extra/navigationScreen.cpp
-	src/screens/extra/droneOperatorScreen.cpp
-	src/screens/extra/dockMasterScreen.cpp
-	src/screens/helios/engineControlScreen.cpp
-	src/screens/helios/helmsHeliosScreen.cpp
-	src/screens/helios/weaponsHeliosScreen.cpp
-	src/screens/helios/databaseHeliosScreen.cpp
-	src/screens/helios/TractorBeamScreen.cpp
-	src/screens/helios/scienceHeliosScreen.cpp
-	src/screens/helios/scienceTaskHeliosScreen.cpp
 	src/screenComponents/aimLock.cpp
 	src/screenComponents/alertOverlay.cpp
 	src/screenComponents/helpOverlay.cpp
@@ -163,7 +144,6 @@ set(SOURCES
 	src/screenComponents/shieldsEnableButton.cpp
 	src/screenComponents/selfDestructButton.cpp
 	src/screenComponents/shieldFreqencySelect.cpp
-	src/screenComponents/systemStatus.cpp
 	src/screenComponents/jumpControls.cpp
 	src/screenComponents/impulseControls.cpp
 	src/screenComponents/frequencyCurve.cpp
@@ -172,7 +152,6 @@ set(SOURCES
 	src/screenComponents/beamTargetSelector.cpp
 	src/screenComponents/shipInternalView.cpp
 	src/screenComponents/beamFrequencySelector.cpp
-	src/screenComponents/sectorsView.cpp
 	src/screenComponents/radarView.cpp
 	src/screenComponents/rawScannerDataRadarOverlay.cpp
 	src/screenComponents/scanTargetButton.cpp
@@ -186,7 +165,6 @@ set(SOURCES
 	src/screenComponents/targetsContainer.cpp
 	src/screenComponents/globalMessage.cpp
 	src/screenComponents/commsOverlay.cpp
-	src/screenComponents/commsOverlayHelios.cpp
 	src/screenComponents/jumpIndicator.cpp
 	src/screenComponents/scanningDialog.cpp
 	src/screenComponents/signalQualityIndicator.cpp
@@ -197,9 +175,6 @@ set(SOURCES
 	src/screenComponents/hackingDialog.cpp
 	src/screenComponents/customShipFunctions.cpp
 	src/screenComponents/scrollingBanner.cpp
-	src/screenComponents/navigationView.cpp
-	src/screenComponents/passwordEntry.cpp
-	src/screenComponents/actionItemOverlay.cpp
 	src/gui/colorConfig.cpp
 	src/gui/hotkeyConfig.cpp
 	src/gui/joystickConfig.cpp
@@ -228,7 +203,6 @@ set(SOURCES
 	src/gui/gui2_keyvaluedisplay.cpp
 	src/gui/gui2_listbox.cpp
 	src/gui/gui2_scrollbar.cpp
-	src/gui/gui2_text.cpp
 	src/gui/gui2_container.cpp
 	src/gui/gui2_panel.cpp
 	src/gui/gui2_overlay.cpp
@@ -242,28 +216,18 @@ set(SOURCES
 	src/spaceObjects/asteroid.cpp
 	src/spaceObjects/mine.cpp
 	src/spaceObjects/blackHole.cpp
-	src/spaceObjects/missileWeapon.cpp
-	src/spaceObjects/EMPMissile.cpp
 	src/spaceObjects/playerSpaceship.cpp
 	src/spaceObjects/beamEffect.cpp
-	src/spaceObjects/torpedo.cpp
-	src/spaceObjects/cruiseMissile.cpp
-	src/spaceObjects/heavyMissile.cpp
-	src/spaceObjects/hvli.cpp
 	src/spaceObjects/electricExplosionEffect.cpp
 	src/spaceObjects/supplyDrop.cpp
 	src/spaceObjects/warpJammer.cpp
 	src/spaceObjects/scanProbe.cpp
-	src/spaceObjects/nuke.cpp
 	src/spaceObjects/artifact.cpp
 	src/spaceObjects/shipTemplateBasedObject.cpp
 	src/spaceObjects/planet.cpp
 	src/spaceObjects/zone.cpp
 	src/spaceObjects/spaceshipParts/beamWeapon.cpp
-	src/spaceObjects/spaceshipParts/tractorBeam.cpp
 	src/spaceObjects/spaceshipParts/weaponTube.cpp
-	src/spaceObjects/spaceshipParts/dock.cpp
-	src/spaceObjects/spaceshipParts/scienceTask.cpp
 	src/ai/fighterAI.cpp
 	src/ai/ai.cpp
 	src/ai/aiFactory.cpp
@@ -279,9 +243,47 @@ set(SOURCES
 	src/hardware/devices/virtualOutputDevice.cpp
 	src/hardware/devices/philipsHueDevice.cpp
 )
-if(WIN32)
-    list(APPEND SOURCES EmptyEpsilon.rc)
-endif()
+
+# Helios sources
+list(APPEND SOURCES EmptyEpsilon.rc 
+	src/cargo.cpp
+	src/shipCargo.cpp
+	src/shipFilter.cpp
+	src/tractorBeamTemplate.cpp
+	src/shipFilter.cpp
+	src/tractorBeamTemplate.cpp
+	src/screens/crew1/singlePilotView.cpp
+	src/screens/extra/radarScreen.cpp
+	src/screens/extra/probeScreen.cpp
+	src/screens/gm/factions.cpp
+	src/screens/extra/navigationScreen.cpp
+	src/screens/extra/droneOperatorScreen.cpp
+	src/screens/extra/dockMasterScreen.cpp
+	src/screens/helios/engineControlScreen.cpp
+	src/screens/helios/helmsHeliosScreen.cpp
+	src/screens/helios/weaponsHeliosScreen.cpp
+	src/screens/helios/databaseHeliosScreen.cpp
+	src/screens/helios/TractorBeamScreen.cpp
+	src/screens/helios/scienceHeliosScreen.cpp
+	src/screens/helios/scienceTaskHeliosScreen.cpp
+	src/screenComponents/systemStatus.cpp
+	src/screenComponents/sectorsView.cpp
+	src/screenComponents/commsOverlayHelios.cpp
+	src/screenComponents/navigationView.cpp
+	src/screenComponents/passwordEntry.cpp
+	src/screenComponents/actionItemOverlay.cpp
+	src/gui/gui2_text.cpp
+	src/spaceObjects/missileWeapon.cpp
+	src/spaceObjects/EMPMissile.cpp
+	src/spaceObjects/torpedo.cpp
+	src/spaceObjects/cruiseMissile.cpp
+	src/spaceObjects/heavyMissile.cpp
+	src/spaceObjects/hvli.cpp
+	src/spaceObjects/nuke.cpp
+	src/spaceObjects/spaceshipParts/tractorBeam.cpp
+	src/spaceObjects/spaceshipParts/dock.cpp
+	src/spaceObjects/spaceshipParts/scienceTask.cpp
+)
 
 foreach(SP_SOURCE
 	src/soundManager.cpp
@@ -298,6 +300,7 @@ foreach(SP_SOURCE
 	src/multiplayer_server_scanner.cpp
 	src/networkRecorder.cpp
 	src/multiplayer_server.cpp
+	src/multiplayer_proxy.cpp
 	src/scriptInterfaceMagic.cpp
 	src/Renderable.cpp
 	src/Updatable.cpp
@@ -308,6 +311,8 @@ foreach(SP_SOURCE
 	src/scriptInterface.cpp
 	src/event.cpp
 	src/multiplayer.cpp
+	src/P.cpp
+	src/i18n.cpp
 	src/Box2D/Dynamics/Contacts/b2EdgeAndCircleContact.cpp
 	src/Box2D/Dynamics/Contacts/b2ContactSolver.cpp
 	src/Box2D/Dynamics/Contacts/b2ChainAndPolygonContact.cpp
@@ -413,8 +418,10 @@ else()
     add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCES})
 endif()
 
-include_directories(${CMAKE_SOURCE_DIR}/src)
-include_directories(${SERIOUS_PROTON_DIR}/src)
+target_include_directories(${EXECUTABLE_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/src)
+target_include_directories(${EXECUTABLE_NAME} PUBLIC ${SERIOUS_PROTON_DIR}/src)
+target_compile_options(${EXECUTABLE_NAME} PUBLIC $<$<CONFIG:Release>:${OPTIMIZER_FLAGS}>)
+target_compile_options(${EXECUTABLE_NAME} PUBLIC $<$<CONFIG:RelWithDebInfo>:-g1 ${OPTIMIZER_FLAGS}>)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
@@ -422,9 +429,8 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 cmake_policy(SET CMP0074 NEW)
 find_package(SFML 2.5 COMPONENTS system window graphics network audio REQUIRED)
 include_directories(${SFML_INCLUDE_DIR})
-message(STATUS "EXECUTABLE: ${EXECUTABLE_NAME}")
-# target_link_libraries(${EXECUTABLE_NAME} sfml-system sfml-window sfml-graphics sfml-audio sfml-network)
 target_link_libraries(${EXECUTABLE_NAME} ${SFML_LIBRARIES})
+# add_definitions(-DSFML_NO_DEPRECATED_WARNINGS) # SFML 2.5 gives deprication warnings on a few functions we use. But we maintain 2.3 compatibility, so ignore those warnings.
 
 # Setup OpenGl
 if(ANDROID)
@@ -452,16 +458,15 @@ endif()
 
 
 include(InstallRequiredSystemLibraries)
-if(MINGW)
-    message(STATUS "MINGW detected")
-    set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-static-libstdc++ -static-libgcc")
-endif()
+
+# Opus for voice chat
+add_subdirectory("${SERIOUS_PROTON_DIR}/src/libopus/" "${CMAKE_CURRENT_BINARY_DIR}/libopus")
+target_link_libraries(${EXECUTABLE_NAME} opus)
 
 if(WIN32)
   execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=libstdc++-6.dll OUTPUT_VARIABLE MINGW_STDCPP_DLL OUTPUT_STRIP_TRAILING_WHITESPACE)
   execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=libgcc_s_sjlj-1.dll OUTPUT_VARIABLE MINGW_LIBGCC_DLL OUTPUT_STRIP_TRAILING_WHITESPACE)
   execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=libwinpthread-1.dll OUTPUT_VARIABLE MINGW_PTHREAD_DLL OUTPUT_STRIP_TRAILING_WHITESPACE)
-  message(STATUS "FILES ${MINGW_STDCPP_DLL} ${MINGW_LIBGCC_DLL} ${MINGW_PTHREAD_DLL} DESTINATION .")
   install(FILES ${MINGW_STDCPP_DLL} ${MINGW_LIBGCC_DLL} ${MINGW_PTHREAD_DLL} DESTINATION .)
   install(FILES /usr/i686-w64-mingw32/lib/libwinpthread-1.dll DESTINATION .)
   install(FILES ${SFML_ROOT}/bin/OpenAL32.dll DESTINATION .)
@@ -520,5 +525,14 @@ if(PYTHONINTERP_FOUND)
 endif()
 
 set(CPACK_PACKAGE_EXECUTABLES ${EXECUTABLE_NAME})
-set(CPACK_GENERATOR "ZIP")
+set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}")
+set(CPACK_PACKAGE_CONTACT "https://github.com/amir-arad/")
+if(NOT DEFINED CPACK_GENERATOR)
+  if(WIN32)
+    set(CPACK_GENERATOR "ZIP")
+  elseif(UNIX)
+    set(CPACK_GENERATOR "DEB")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libsfml-dev")
+  endif()
+endif()
 include(CPack)

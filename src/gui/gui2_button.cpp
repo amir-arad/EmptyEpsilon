@@ -12,6 +12,7 @@ GuiButton::GuiButton(GuiContainer* owner, string id, string text, func_t func)
 GuiButton* GuiButton::setColor(sf::Color color, sf::Color text_color){
     this->color = color;
     this->text_color = text_color;
+    return this;
 }
 
 void GuiButton::onDraw(sf::RenderTarget& window)
